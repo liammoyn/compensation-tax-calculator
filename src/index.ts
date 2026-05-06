@@ -1,19 +1,44 @@
 import { serve } from "bun";
+import {
+	deletePackage,
+	getAllPackages,
+	getGlobalTaxInputs,
+	setGlobalTaxInputs,
+	upsertPackage,
+} from "./db";
 import index from "./index.html";
 
 const server = serve({
-  routes: {
-    // Serve index.html for all unmatched routes.
-    "/*": index,
-  },
-
-  development: process.env.NODE_ENV !== "production" && {
-    // Enable browser hot reloading in development
-    hmr: true,
-
-    // Echo console logs from the browser to the server
-    console: true,
-  },
+	routes: {
+		"/api/packages": {
+			GET: () => Response.json(getAllPackages()),
+			POST: async (req: Request) => {
+				const pkg = await req.json();
+				upsertPackage(pkg);
+				return Response.json({ ok: true });
+			},
+		},
+		"/api/packages/:id": {
+			DELETE: (req: Request) => {
+				const id = new URL(req.url).pathname.split("/").pop() ?? "";
+				deletePackage(id);
+				return Response.json({ ok: true });
+			},
+		},
+		"/api/tax-inputs": {
+			GET: () => Response.json(getGlobalTaxInputs()),
+			PUT: async (req: Request) => {
+				const taxInputs = await req.json();
+				setGlobalTaxInputs(taxInputs);
+				return Response.json({ ok: true });
+			},
+		},
+		"/*": index,
+	},
+	development: process.env.NODE_ENV !== "production" && {
+		hmr: true,
+		console: true,
+	},
 });
 
 console.log(`🚀 Server running at ${server.url}`);
