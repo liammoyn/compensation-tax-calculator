@@ -35,8 +35,10 @@ function Field({
 	children: React.ReactNode;
 }) {
 	return (
-		<div className="space-y-1">
-			<Label className="text-xs text-muted-foreground">{label}</Label>
+		<div className="space-y-1.5">
+			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+				{label}
+			</Label>
 			{children}
 		</div>
 	);
@@ -51,11 +53,11 @@ function DollarInput({
 }) {
 	return (
 		<div className="relative">
-			<span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+			<span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">
 				$
 			</span>
 			<Input
-				className="pl-5 h-8 text-sm"
+				className="pl-6 h-8 text-sm font-mono"
 				value={value.toLocaleString("en-US")}
 				onChange={(e) => {
 					const n = parseFloat(e.target.value.replace(/,/g, ""));
@@ -128,7 +130,7 @@ export function RestrictedStockForm({
 			<div className="grid grid-cols-2 gap-3">
 				<Field label="Shares Granted">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="number"
 						value={component.sharesGranted}
 						onChange={(e) =>
@@ -147,7 +149,7 @@ export function RestrictedStockForm({
 				</Field>
 				<Field label="Grant Date">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="date"
 						value={component.grantDate}
 						onChange={(e) =>
@@ -162,12 +164,12 @@ export function RestrictedStockForm({
 					checked={component.election83b}
 					onCheckedChange={(v) => onChange({ ...component, election83b: v })}
 				/>
-				<Label htmlFor="rs-83b" className="text-sm cursor-pointer">
+				<Label htmlFor="rs-83b" className="text-xs cursor-pointer text-muted-foreground">
 					83(b) Election filed at grant
 				</Label>
 			</div>
 			{component.election83b && (
-				<p className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+				<p className="text-xs text-primary/80 bg-accent/60 border border-accent px-3 py-2 rounded-md">
 					With 83(b): ordinary income recognized on all shares at grant;
 					subsequent vests trigger LTCG on appreciation.
 				</p>
@@ -197,7 +199,7 @@ export function RSUForm({
 			<div className="grid grid-cols-2 gap-3">
 				<Field label="Shares Granted">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="number"
 						value={component.sharesGranted}
 						onChange={(e) =>
@@ -216,7 +218,7 @@ export function RSUForm({
 				</Field>
 				<Field label="Grant Date">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="date"
 						value={component.grantDate}
 						onChange={(e) =>
@@ -234,7 +236,7 @@ export function RSUForm({
 							})
 						}
 					>
-						<SelectTrigger className="h-8 text-sm">
+						<SelectTrigger className="h-8 text-sm font-mono">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
@@ -246,7 +248,7 @@ export function RSUForm({
 				{component.vestingType === "double_trigger" && (
 					<Field label="Liquidity Event Year">
 						<Input
-							className="h-8 text-sm"
+							className="h-8 text-sm font-mono"
 							type="number"
 							value={component.liquidityEventYear ?? CURRENT_YEAR + 2}
 							onChange={(e) =>
@@ -260,7 +262,7 @@ export function RSUForm({
 				)}
 			</div>
 			{component.vestingType === "double_trigger" && (
-				<p className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+				<p className="text-xs text-primary/80 bg-accent/60 border border-accent px-3 py-2 rounded-md">
 					Double-trigger: taxable event deferred to the liquidity event year.
 					Shares settled (and taxed) at FMV on the liquidity event date.
 				</p>
@@ -299,7 +301,7 @@ export function ISOForm({
 			<div className="grid grid-cols-2 gap-3">
 				<Field label="Shares Granted">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="number"
 						value={component.sharesGranted}
 						onChange={(e) =>
@@ -324,7 +326,7 @@ export function ISOForm({
 				</Field>
 				<Field label="Grant Date">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="date"
 						value={component.grantDate}
 						onChange={(e) =>
@@ -334,7 +336,7 @@ export function ISOForm({
 				</Field>
 				<Field label="Expiration Date">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="date"
 						value={component.expirationDate}
 						onChange={(e) =>
@@ -345,31 +347,31 @@ export function ISOForm({
 			</div>
 
 			{over100k && (
-				<div className="flex gap-2 items-start p-2 bg-yellow-50 rounded text-xs text-yellow-800">
+				<div className="flex gap-2 items-start px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800">
 					<AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
 					§100k limit: {isoShares.toLocaleString()} shares qualify as ISO;{" "}
 					{nqoShares.toLocaleString()} treated as NQO at calculation time.
 				</div>
 			)}
 			{exceedsExpiry && (
-				<div className="flex gap-2 items-start p-2 bg-yellow-50 rounded text-xs text-yellow-800">
+				<div className="flex gap-2 items-start px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800">
 					<AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
 					ISOs may not have a term exceeding 10 years from grant date.
 				</div>
 			)}
 			{component.strikePrice > component.grantFMV && (
-				<div className="flex gap-2 items-start p-2 bg-yellow-50 rounded text-xs text-yellow-800">
+				<div className="flex gap-2 items-start px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800">
 					<AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
 					Strike price exceeds FMV — unusual for ISOs; may fail §422 fair market
 					value requirement.
 				</div>
 			)}
-			<div className="p-2 bg-blue-50 rounded text-xs text-blue-700">
+			<div className="px-3 py-2 bg-accent/60 border border-accent rounded-md text-xs text-primary/70">
 				v1 models all ISO exercises as disqualifying dispositions
 				(sell-on-exercise). Exercise-and-hold qualified disposition treatment is
 				in v1.1.
 			</div>
-			<div className="p-2 bg-muted rounded text-xs text-muted-foreground">
+			<div className="px-3 py-2 bg-muted/80 border border-border/50 rounded-md text-xs text-muted-foreground">
 				For private companies: strike price should reflect a 409A valuation
 				(typically ~1/3 of preferred stock value).
 			</div>
@@ -398,7 +400,7 @@ export function NQOForm({
 			<div className="grid grid-cols-2 gap-3">
 				<Field label="Shares Granted">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="number"
 						value={component.sharesGranted}
 						onChange={(e) =>
@@ -423,7 +425,7 @@ export function NQOForm({
 				</Field>
 				<Field label="Grant Date">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="date"
 						value={component.grantDate}
 						onChange={(e) =>
@@ -433,7 +435,7 @@ export function NQOForm({
 				</Field>
 				<Field label="Expiration Date">
 					<Input
-						className="h-8 text-sm"
+						className="h-8 text-sm font-mono"
 						type="date"
 						value={component.expirationDate}
 						onChange={(e) =>

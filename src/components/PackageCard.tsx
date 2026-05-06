@@ -28,27 +28,27 @@ function ScenarioRateFields({
 	onChange: (r: { downside: number; base: number; upside: number }) => void;
 }) {
 	return (
-		<div className="space-y-1">
-			<Label className="text-xs text-muted-foreground">{label}</Label>
+		<div className="space-y-1.5">
+			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">{label}</Label>
 			<div className="grid grid-cols-3 gap-1">
 				{(["downside", "base", "upside"] as const).map((s) => (
 					<div key={s} className="relative">
 						<Input
-							className="h-7 text-xs pr-5"
+							className="h-7 text-xs pr-4 font-mono"
 							value={(rates[s] * 100).toFixed(1)}
 							onChange={(e) => {
 								const n = parseFloat(e.target.value) / 100;
 								if (!Number.isNaN(n)) onChange({ ...rates, [s]: n });
 							}}
 						/>
-						<span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+						<span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground/60 font-mono">
 							%
 						</span>
 					</div>
 				))}
-				<div className="text-xs text-muted-foreground text-center">↓ dn</div>
-				<div className="text-xs text-muted-foreground text-center">↑ base</div>
-				<div className="text-xs text-muted-foreground text-center">↑↑ up</div>
+				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">↓ dn</div>
+				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">base</div>
+				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">↑↑ up</div>
 			</div>
 		</div>
 	);
@@ -83,19 +83,19 @@ export function PackageCard({
 			: 0;
 
 	return (
-		<Card className="overflow-hidden">
-			<CardHeader className="pb-0 pt-3 px-4">
-				<div className="flex items-center gap-2">
+		<Card className="overflow-hidden shadow-none border">
+			<CardHeader className="pb-0 pt-4 px-5">
+				<div className="flex items-center gap-3">
 					<Input
-						className="text-base font-semibold border-0 shadow-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+						className="text-base font-semibold border-0 shadow-none p-0 h-auto focus-visible:ring-0 bg-transparent tracking-tight"
 						value={pkg.name}
 						onChange={(e) => onChange({ ...pkg, name: e.target.value })}
 					/>
-					<div className="flex items-center gap-1 ml-auto">
+					<div className="flex items-center gap-0.5 ml-auto">
 						<Button
 							variant="ghost"
 							size="icon"
-							className="h-7 w-7"
+							className="h-7 w-7 text-muted-foreground/50 hover:text-muted-foreground"
 							onClick={onDuplicate}
 							title="Duplicate"
 						>
@@ -104,7 +104,7 @@ export function PackageCard({
 						<Button
 							variant="ghost"
 							size="icon"
-							className="h-7 w-7 text-muted-foreground hover:text-destructive"
+							className="h-7 w-7 text-muted-foreground/50 hover:text-destructive"
 							onClick={onDelete}
 							title="Delete"
 						>
@@ -114,30 +114,32 @@ export function PackageCard({
 				</div>
 			</CardHeader>
 
-			<CardContent className="px-4 pb-4 space-y-4">
+			<CardContent className="px-5 pb-5 space-y-4 pt-3">
 				{/* Package Settings */}
 				<Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
-					<CollapsibleTrigger className="flex w-full items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+					<CollapsibleTrigger className="flex w-full items-center gap-1.5 group">
 						{settingsOpen ? (
-							<ChevronDown className="h-3.5 w-3.5" />
+							<ChevronDown className="h-3 w-3 text-muted-foreground/50" />
 						) : (
-							<ChevronRight className="h-3.5 w-3.5" />
+							<ChevronRight className="h-3 w-3 text-muted-foreground/50" />
 						)}
-						Package Settings
+						<span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+							Package Settings
+						</span>
 					</CollapsibleTrigger>
 					<CollapsibleContent>
-						<div className="mt-3 space-y-3">
-							<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-								<div className="space-y-1">
-									<Label className="text-xs text-muted-foreground">
+						<div className="mt-3 space-y-4">
+							<div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+								<div className="space-y-1.5">
+									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
 										Company Valuation
 									</Label>
 									<div className="relative">
-										<span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+										<span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">
 											$
 										</span>
 										<Input
-											className="pl-5 h-8 text-sm"
+											className="pl-6 h-8 text-sm font-mono"
 											value={pkg.companyValuation.toLocaleString("en-US")}
 											onChange={(e) => {
 												const n = parseFloat(e.target.value.replace(/,/g, ""));
@@ -147,12 +149,12 @@ export function PackageCard({
 										/>
 									</div>
 								</div>
-								<div className="space-y-1">
-									<Label className="text-xs text-muted-foreground">
+								<div className="space-y-1.5">
+									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
 										Shares Outstanding
 									</Label>
 									<Input
-										className="h-8 text-sm"
+										className="h-8 text-sm font-mono"
 										value={pkg.sharesOutstanding.toLocaleString("en-US")}
 										onChange={(e) => {
 											const n = parseFloat(e.target.value.replace(/,/g, ""));
@@ -161,22 +163,22 @@ export function PackageCard({
 										}}
 									/>
 								</div>
-								<div className="space-y-1">
-									<Label className="text-xs text-muted-foreground">
+								<div className="space-y-1.5">
+									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
 										Base Price / Share
 									</Label>
 									<Input
-										className="h-8 text-sm bg-muted"
+										className="h-8 text-sm font-mono bg-muted/50 text-muted-foreground"
 										value={formatCurrency(basePrice)}
 										readOnly
 									/>
 								</div>
-								<div className="space-y-1">
-									<Label className="text-xs text-muted-foreground">
-										Horizon (years)
+								<div className="space-y-1.5">
+									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+										Horizon (yrs)
 									</Label>
 									<Input
-										className="h-8 text-sm"
+										className="h-8 text-sm font-mono"
 										type="number"
 										min={1}
 										max={10}
@@ -194,7 +196,7 @@ export function PackageCard({
 								</div>
 							</div>
 
-							<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+							<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 								<ScenarioRateFields
 									label="Stock Price Growth (%/yr)"
 									rates={pkg.scenarioGrowthRates}
@@ -217,22 +219,24 @@ export function PackageCard({
 
 				{/* Per-package tax override */}
 				<Collapsible open={taxOverrideOpen} onOpenChange={setTaxOverrideOpen}>
-					<CollapsibleTrigger className="flex w-full items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+					<CollapsibleTrigger className="flex w-full items-center gap-1.5 group">
 						{taxOverrideOpen ? (
-							<ChevronDown className="h-3.5 w-3.5" />
+							<ChevronDown className="h-3 w-3 text-muted-foreground/50" />
 						) : (
-							<ChevronRight className="h-3.5 w-3.5" />
+							<ChevronRight className="h-3 w-3 text-muted-foreground/50" />
 						)}
-						Per-Package Tax Override
+						<span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+							Tax Override
+						</span>
 						{pkg.taxInputs && (
-							<span className="text-xs text-blue-600 font-normal">
-								(active)
+							<span className="text-[10px] text-primary font-semibold tracking-wide uppercase">
+								· Active
 							</span>
 						)}
 					</CollapsibleTrigger>
 					<CollapsibleContent>
-						<div className="mt-2 space-y-2">
-							<div className="flex items-center gap-2">
+						<div className="mt-3 space-y-3">
+							<div className="flex items-center gap-2.5">
 								<Switch
 									id={`tax-override-${pkg.id}`}
 									checked={!!pkg.taxInputs}
@@ -245,9 +249,9 @@ export function PackageCard({
 								/>
 								<Label
 									htmlFor={`tax-override-${pkg.id}`}
-									className="text-sm cursor-pointer"
+									className="text-xs cursor-pointer text-muted-foreground"
 								>
-									Override global tax inputs for this package
+									Override global tax assumptions for this package
 								</Label>
 							</div>
 							{pkg.taxInputs && (
@@ -260,20 +264,24 @@ export function PackageCard({
 					</CollapsibleContent>
 				</Collapsible>
 
-				<Separator />
+				<Separator className="opacity-50" />
 
 				{/* Component Builder */}
-				<div className="space-y-2">
-					<p className="text-sm font-medium">Compensation Components</p>
+				<div className="space-y-2.5">
+					<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
+						Compensation Components
+					</p>
 					<ComponentBuilder pkg={pkg} onChange={onChange} />
 				</div>
 
 				{/* Results */}
 				{pkg.components.length > 0 && (
 					<>
-						<Separator />
-						<div className="space-y-2">
-							<p className="text-sm font-medium">Results</p>
+						<Separator className="opacity-50" />
+						<div className="space-y-3">
+							<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
+								Results
+							</p>
 							<PackageResultSummary result={result} />
 						</div>
 					</>

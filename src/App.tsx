@@ -146,34 +146,39 @@ export function App() {
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<p className="text-muted-foreground">Loading...</p>
+				<p className="text-muted-foreground text-sm">Loading…</p>
 			</div>
 		);
 	}
 
 	return (
 		<div className="min-h-screen bg-background w-full">
-			<header className="border-b bg-card sticky top-0 z-20">
-				<div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-					<div>
-						<h1 className="text-lg font-bold">Comp Package Evaluator</h1>
-						<p className="text-xs text-muted-foreground">
-							After-tax value · employer cost · NPV analysis
-						</p>
+			<header className="border-b bg-card/90 backdrop-blur sticky top-0 z-20">
+				<div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
+					<div className="flex items-center gap-3">
+						<div className="w-1 h-8 rounded-full bg-primary" />
+						<div>
+							<h1 className="text-sm font-semibold tracking-tight leading-tight">
+								Comp Package Evaluator
+							</h1>
+							<p className="text-[11px] text-muted-foreground tracking-wide">
+								After-tax value · employer cost · NPV analysis
+							</p>
+						</div>
 					</div>
 					<div className="flex items-center gap-2">
 						<Button
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={exportAll}
-							className="gap-1.5"
+							className="gap-1.5 text-xs h-7 px-3 text-muted-foreground hover:text-foreground"
 						>
-							<Download className="h-3.5 w-3.5" /> Export
+							<Download className="h-3 w-3" /> Export
 						</Button>
 						<label>
-							<Button variant="outline" size="sm" asChild>
-								<span className="gap-1.5 cursor-pointer">
-									<Upload className="h-3.5 w-3.5" /> Import
+							<Button variant="ghost" size="sm" asChild>
+								<span className="gap-1.5 cursor-pointer text-xs h-7 px-3 text-muted-foreground hover:text-foreground">
+									<Upload className="h-3 w-3" /> Import
 								</span>
 							</Button>
 							<input
@@ -187,12 +192,12 @@ export function App() {
 				</div>
 			</header>
 
-			<div className="max-w-7xl mx-auto px-4 py-6">
+			<div className="max-w-7xl mx-auto px-5 py-6">
 				<Tabs defaultValue="builder">
-					<TabsList className="mb-6">
-						<TabsTrigger value="builder">Builder</TabsTrigger>
-						<TabsTrigger value="compare">Compare</TabsTrigger>
-						<TabsTrigger value="timeline">Timeline</TabsTrigger>
+					<TabsList className="mb-6 h-9 bg-muted/60">
+						<TabsTrigger value="builder" className="text-xs tracking-wide">Builder</TabsTrigger>
+						<TabsTrigger value="compare" className="text-xs tracking-wide">Compare</TabsTrigger>
+						<TabsTrigger value="timeline" className="text-xs tracking-wide">Timeline</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="builder">
@@ -215,15 +220,15 @@ export function App() {
 							</div>
 							<Button
 								onClick={addPackage}
-								className="w-full gap-2"
+								className="w-full gap-2 border-dashed hover:border-solid transition-all text-muted-foreground hover:text-foreground h-9 text-xs tracking-wide"
 								variant="outline"
 							>
-								<Plus className="h-4 w-4" /> Add Package
+								<Plus className="h-3.5 w-3.5" /> Add Package
 							</Button>
 							{packages.length === 0 && (
-								<div className="text-center py-12 text-muted-foreground">
-									<p className="text-lg mb-2">No packages yet</p>
-									<p className="text-sm">
+								<div className="text-center py-16 text-muted-foreground border border-dashed rounded-lg">
+									<p className="text-sm font-medium mb-1">No packages yet</p>
+									<p className="text-xs">
 										Click "Add Package" to start evaluating compensation offers.
 									</p>
 								</div>

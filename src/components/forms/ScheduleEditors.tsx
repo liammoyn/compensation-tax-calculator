@@ -41,20 +41,20 @@ export function VestingScheduleEditor({
 	return (
 		<div className="space-y-2">
 			<div className="flex items-center justify-between">
-				<Label className="text-xs text-muted-foreground">
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
 					Vesting Schedule
 				</Label>
 				<Button
 					size="sm"
-					variant="outline"
-					className="h-6 text-xs px-2"
+					variant="ghost"
+					className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground tracking-wide uppercase font-semibold"
 					onClick={add}
 				>
 					<Plus className="h-3 w-3 mr-1" /> Add Tranche
 				</Button>
 			</div>
 			{schedule.length === 0 && (
-				<p className="text-xs text-muted-foreground italic">
+				<p className="text-xs text-muted-foreground/50 italic">
 					No vest events — add tranches above.
 				</p>
 			)}
@@ -63,11 +63,11 @@ export function VestingScheduleEditor({
 					key={`${event.year}-${event.month}`}
 					className="flex items-center gap-2"
 				>
-					<div className="flex-1 grid grid-cols-3 gap-1">
+					<div className="flex-1 grid grid-cols-3 gap-1.5">
 						<div>
-							<Label className="text-xs text-muted-foreground">Year</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Year</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								value={event.year}
 								onChange={(e) =>
@@ -78,9 +78,9 @@ export function VestingScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-xs text-muted-foreground">Month</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Mo.</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								min={1}
 								max={12}
@@ -96,9 +96,9 @@ export function VestingScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-xs text-muted-foreground">Fraction</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Frac.</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								step="0.01"
 								min={0}
@@ -110,25 +110,24 @@ export function VestingScheduleEditor({
 							/>
 						</div>
 					</div>
-					<div className="text-xs text-muted-foreground pt-5 w-20 text-right">
-						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()}{" "}
-						sh
+					<div className="text-[11px] text-muted-foreground/60 pt-5 w-20 text-right font-mono">
+						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()} sh
 					</div>
 					<button
 						type="button"
 						onClick={() => remove(i)}
-						className="pt-4 text-muted-foreground hover:text-destructive"
+						className="pt-4 text-muted-foreground/30 hover:text-destructive transition-colors"
 					>
-						<Trash2 className="h-3.5 w-3.5" />
+						<Trash2 className="h-3 w-3" />
 					</button>
 				</div>
 			))}
 			{schedule.length > 0 && (
 				<p
-					className={`text-xs ${Math.abs(totalFraction - 1) > 0.001 ? "text-yellow-600" : "text-muted-foreground"}`}
+					className={`text-[11px] font-mono ${Math.abs(totalFraction - 1) > 0.001 ? "text-amber-600" : "text-muted-foreground/50"}`}
 				>
-					Total fraction: {(totalFraction * 100).toFixed(1)}%
-					{Math.abs(totalFraction - 1) > 0.001 && " (should sum to 100%)"}
+					Total: {(totalFraction * 100).toFixed(1)}%
+					{Math.abs(totalFraction - 1) > 0.001 && " — should sum to 100%"}
 				</p>
 			)}
 		</div>
@@ -171,20 +170,20 @@ export function ExerciseScheduleEditor({
 	return (
 		<div className="space-y-2">
 			<div className="flex items-center justify-between">
-				<Label className="text-xs text-muted-foreground">
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
 					Exercise Schedule
 				</Label>
 				<Button
 					size="sm"
-					variant="outline"
-					className="h-6 text-xs px-2"
+					variant="ghost"
+					className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground tracking-wide uppercase font-semibold"
 					onClick={add}
 				>
 					<Plus className="h-3 w-3 mr-1" /> Add Exercise
 				</Button>
 			</div>
 			{schedule.length === 0 && (
-				<p className="text-xs text-muted-foreground italic">
+				<p className="text-xs text-muted-foreground/50 italic">
 					No exercise events — add above.
 				</p>
 			)}
@@ -193,11 +192,11 @@ export function ExerciseScheduleEditor({
 					key={`${event.year}-${event.month}`}
 					className="flex items-center gap-2"
 				>
-					<div className="flex-1 grid grid-cols-3 gap-1">
+					<div className="flex-1 grid grid-cols-3 gap-1.5">
 						<div>
-							<Label className="text-xs text-muted-foreground">Year</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Year</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								value={event.year}
 								onChange={(e) =>
@@ -208,9 +207,9 @@ export function ExerciseScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-xs text-muted-foreground">Month</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Mo.</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								min={1}
 								max={12}
@@ -226,9 +225,9 @@ export function ExerciseScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-xs text-muted-foreground">Fraction</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Frac.</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								step="0.01"
 								min={0}
@@ -240,25 +239,24 @@ export function ExerciseScheduleEditor({
 							/>
 						</div>
 					</div>
-					<div className="text-xs text-muted-foreground pt-5 w-20 text-right">
-						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()}{" "}
-						sh
+					<div className="text-[11px] text-muted-foreground/60 pt-5 w-20 text-right font-mono">
+						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()} sh
 					</div>
 					<button
 						type="button"
 						onClick={() => remove(i)}
-						className="pt-4 text-muted-foreground hover:text-destructive"
+						className="pt-4 text-muted-foreground/30 hover:text-destructive transition-colors"
 					>
-						<Trash2 className="h-3.5 w-3.5" />
+						<Trash2 className="h-3 w-3" />
 					</button>
 				</div>
 			))}
 			{schedule.length > 0 && (
 				<p
-					className={`text-xs ${Math.abs(totalFraction - 1) > 0.001 ? "text-yellow-600" : "text-muted-foreground"}`}
+					className={`text-[11px] font-mono ${Math.abs(totalFraction - 1) > 0.001 ? "text-amber-600" : "text-muted-foreground/50"}`}
 				>
-					Total fraction: {(totalFraction * 100).toFixed(1)}%
-					{Math.abs(totalFraction - 1) > 0.001 && " (should sum to 100%)"}
+					Total: {(totalFraction * 100).toFixed(1)}%
+					{Math.abs(totalFraction - 1) > 0.001 && " — should sum to 100%"}
 				</p>
 			)}
 		</div>
@@ -287,13 +285,14 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 	return (
 		<div className="space-y-2">
 			<div className="flex items-center justify-between">
-				<Label className="text-xs text-muted-foreground">
-					Payment Schedule (optional — defaults to year-end)
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+					Payment Schedule
+					<span className="normal-case tracking-normal font-normal text-muted-foreground/50 ml-1">(optional)</span>
 				</Label>
 				<Button
 					size="sm"
-					variant="outline"
-					className="h-6 text-xs px-2"
+					variant="ghost"
+					className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground tracking-wide uppercase font-semibold"
 					onClick={add}
 				>
 					<Plus className="h-3 w-3 mr-1" /> Add Payment
@@ -304,11 +303,11 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 					key={`${event.year}-${event.month}`}
 					className="flex items-center gap-2"
 				>
-					<div className="flex-1 grid grid-cols-3 gap-1">
+					<div className="flex-1 grid grid-cols-3 gap-1.5">
 						<div>
-							<Label className="text-xs text-muted-foreground">Year</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Year</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								value={event.year}
 								onChange={(e) =>
@@ -319,9 +318,9 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 							/>
 						</div>
 						<div>
-							<Label className="text-xs text-muted-foreground">Month</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Mo.</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								min={1}
 								max={12}
@@ -337,9 +336,9 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 							/>
 						</div>
 						<div>
-							<Label className="text-xs text-muted-foreground">Fraction</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">Frac.</Label>
 							<Input
-								className="h-7 text-xs"
+								className="h-7 text-xs font-mono"
 								type="number"
 								step="0.01"
 								min={0}
@@ -354,9 +353,9 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 					<button
 						type="button"
 						onClick={() => remove(i)}
-						className="pt-4 text-muted-foreground hover:text-destructive"
+						className="pt-4 text-muted-foreground/30 hover:text-destructive transition-colors"
 					>
-						<Trash2 className="h-3.5 w-3.5" />
+						<Trash2 className="h-3 w-3" />
 					</button>
 				</div>
 			))}

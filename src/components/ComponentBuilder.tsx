@@ -82,12 +82,12 @@ function componentSummary(c: CompComponent): string {
 }
 
 const BADGE_COLORS: Record<CompComponent["type"], string> = {
-	cash_salary: "bg-green-100 text-green-800",
-	cash_bonus: "bg-teal-100 text-teal-800",
-	rs: "bg-purple-100 text-purple-800",
-	rsu: "bg-blue-100 text-blue-800",
-	iso: "bg-orange-100 text-orange-800",
-	nqo: "bg-red-100 text-red-800",
+	cash_salary: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+	cash_bonus: "bg-teal-100 text-teal-700 border border-teal-200",
+	rs: "bg-violet-100 text-violet-700 border border-violet-200",
+	rsu: "bg-sky-100 text-sky-700 border border-sky-200",
+	iso: "bg-amber-100 text-amber-700 border border-amber-200",
+	nqo: "bg-rose-100 text-rose-700 border border-rose-200",
 };
 
 interface Props {
@@ -139,10 +139,10 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 	};
 
 	return (
-		<div className="space-y-2">
+		<div className="space-y-1.5">
 			{pkg.components.length === 0 && (
-				<p className="text-sm text-muted-foreground italic py-2">
-					No components yet — add comp components below.
+				<p className="text-xs text-muted-foreground/60 italic py-2">
+					No components yet.
 				</p>
 			)}
 
@@ -160,20 +160,20 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 						<CollapsibleTrigger asChild>
 							<button
 								type="button"
-								className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-muted/50 transition-colors"
+								className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-muted/30 transition-colors"
 							>
-								<div className="flex items-center gap-2">
+								<div className="flex items-center gap-2.5">
 									{openComponents.has(i) ? (
-										<ChevronDown className="h-3.5 w-3.5" />
+										<ChevronDown className="h-3 w-3 text-muted-foreground/50" />
 									) : (
-										<ChevronRight className="h-3.5 w-3.5" />
+										<ChevronRight className="h-3 w-3 text-muted-foreground/50" />
 									)}
 									<span
-										className={`text-xs font-medium px-2 py-0.5 rounded-full ${BADGE_COLORS[component.type]}`}
+										className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${BADGE_COLORS[component.type]}`}
 									>
 										{COMPONENT_LABELS[component.type]}
 									</span>
-									<span className="text-sm text-muted-foreground">
+									<span className="text-xs text-muted-foreground font-mono">
 										{componentSummary(component)}
 									</span>
 								</div>
@@ -183,14 +183,14 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 										e.stopPropagation();
 										removeComponent(i);
 									}}
-									className="text-muted-foreground hover:text-destructive p-1"
+									className="text-muted-foreground/30 hover:text-destructive p-1 transition-colors"
 								>
-									<Trash2 className="h-3.5 w-3.5" />
+									<Trash2 className="h-3 w-3" />
 								</button>
 							</button>
 						</CollapsibleTrigger>
 						<CollapsibleContent>
-							<div className="px-4 pb-4 pt-2 border-t bg-muted/20">
+							<div className="px-4 pb-4 pt-3 border-t bg-muted/20">
 								<ComponentForm
 									component={component}
 									onChange={(c) => updateComponent(i, c)}
@@ -201,27 +201,27 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 				</Collapsible>
 			))}
 
-			<div className="relative">
+			<div className="relative pt-1">
 				<Button
 					variant="outline"
 					size="sm"
-					className="w-full"
+					className="w-full h-8 text-xs text-muted-foreground border-dashed hover:border-solid hover:text-foreground transition-all"
 					onClick={() => setShowMenu(!showMenu)}
 				>
-					<Plus className="h-4 w-4 mr-1" /> Add Component
+					<Plus className="h-3.5 w-3.5 mr-1.5" /> Add Component
 				</Button>
 				{showMenu && (
-					<div className="absolute top-full left-0 z-10 mt-1 w-48 rounded-md border bg-popover shadow-md">
+					<div className="absolute top-full left-0 z-10 mt-1 w-52 rounded-lg border bg-popover shadow-lg overflow-hidden">
 						{(Object.keys(COMPONENT_LABELS) as CompComponent["type"][]).map(
 							(type) => (
 								<button
 									type="button"
 									key={type}
-									className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+									className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-muted/60 transition-colors"
 									onClick={() => addComponent(type)}
 								>
 									<span
-										className={`text-xs px-1.5 py-0.5 rounded-full ${BADGE_COLORS[type]}`}
+										className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${BADGE_COLORS[type]}`}
 									>
 										{COMPONENT_LABELS[type]}
 									</span>

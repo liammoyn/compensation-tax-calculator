@@ -32,20 +32,20 @@ function PctField({
 }) {
 	const value = taxInputs[field] as number;
 	return (
-		<div className="space-y-1">
-			<Label className="text-xs text-muted-foreground" title={tooltip}>
+		<div className="space-y-1.5">
+			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70" title={tooltip}>
 				{label}
 			</Label>
 			<div className="relative">
 				<Input
-					className="pr-7 h-8 text-sm"
+					className="pr-7 h-8 text-sm font-mono"
 					value={(value * 100).toFixed(2)}
 					onChange={(e) => {
 						const n = parseFloat(e.target.value) / 100;
 						if (!Number.isNaN(n)) onChange({ ...taxInputs, [field]: n });
 					}}
 				/>
-				<span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+				<span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">
 					%
 				</span>
 			</div>
@@ -66,14 +66,14 @@ function DollarField({
 }) {
 	const value = taxInputs[field] as number;
 	return (
-		<div className="space-y-1">
-			<Label className="text-xs text-muted-foreground">{label}</Label>
+		<div className="space-y-1.5">
+			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">{label}</Label>
 			<div className="relative">
-				<span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+				<span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">
 					$
 				</span>
 				<Input
-					className="pl-5 h-8 text-sm"
+					className="pl-6 h-8 text-sm font-mono"
 					value={value.toLocaleString("en-US")}
 					onChange={(e) => {
 						const n = parseFloat(e.target.value.replace(/,/g, ""));
@@ -92,41 +92,45 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 
 	return (
 		<Collapsible open={open} onOpenChange={setOpen}>
-			<Card>
-				<CardHeader className="pb-2">
+			<Card className="shadow-none">
+				<CardHeader className="pb-2 px-5 pt-4">
 					<CollapsibleTrigger asChild>
 						<button
 							type="button"
-							className="flex w-full items-center justify-between text-left"
+							className="flex w-full items-center justify-between text-left group"
 						>
-							<CardTitle className="text-base">Global Tax Inputs</CardTitle>
+							<div className="flex items-center gap-2">
+								<CardTitle className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
+									Tax Assumptions
+								</CardTitle>
+							</div>
 							<div className="flex items-center gap-3">
 								{!open && (
-									<span className="text-xs text-muted-foreground">
+									<span className="text-[11px] text-muted-foreground font-mono">
 										{summary}
 									</span>
 								)}
 								{open ? (
-									<ChevronDown className="h-4 w-4" />
+									<ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
 								) : (
-									<ChevronRight className="h-4 w-4" />
+									<ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
 								)}
 							</div>
 						</button>
 					</CollapsibleTrigger>
 				</CardHeader>
 				<CollapsibleContent>
-					<CardContent className="pt-0">
-						<div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+					<CardContent className="pt-0 px-5 pb-5">
+						<div className="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 							<PctField
-								label="Federal Ordinary Rate"
+								label="Federal Ordinary"
 								field="federalOrdinaryRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Marginal federal rate on wages and ordinary income"
 							/>
 							<PctField
-								label="Federal LTCG Rate"
+								label="Federal LTCG"
 								field="federalLTCGRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
@@ -147,26 +151,26 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								tooltip="Employee-side FICA: 7.65% up to SS wage base, 1.45% above"
 							/>
 							<PctField
-								label="Additional Medicare"
+								label="Add. Medicare"
 								field="additionalMedicareRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="0.9% employee-only above threshold"
 							/>
 							<DollarField
-								label="Add. Medicare Threshold"
+								label="Medicare Threshold"
 								field="additionalMedicareThreshold"
 								taxInputs={taxInputs}
 								onChange={onChange}
 							/>
 							<PctField
-								label="State Ordinary Rate"
+								label="State Ordinary"
 								field="stateOrdinaryRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
 							/>
 							<PctField
-								label="State LTCG Rate"
+								label="State LTCG"
 								field="stateLTCGRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
@@ -186,14 +190,14 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								tooltip="Employer marginal corporate tax rate"
 							/>
 							<PctField
-								label="Employee Discount Rate"
+								label="Employee Disc. Rate"
 								field="employeeDiscountRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Employee required rate of return for NPV"
 							/>
 							<PctField
-								label="Employer Discount Rate"
+								label="Employer Disc. Rate"
 								field="employerDiscountRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
@@ -207,8 +211,8 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 							/>
 						</div>
 
-						<div className="mt-4 flex flex-wrap gap-6">
-							<div className="flex items-center gap-2">
+						<div className="mt-5 pt-4 border-t flex flex-wrap gap-6">
+							<div className="flex items-center gap-2.5">
 								<Switch
 									id="niit-toggle"
 									checked={taxInputs.niitAlwaysOn}
@@ -216,11 +220,11 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 										onChange({ ...taxInputs, niitAlwaysOn: v })
 									}
 								/>
-								<Label htmlFor="niit-toggle" className="text-sm cursor-pointer">
+								<Label htmlFor="niit-toggle" className="text-xs cursor-pointer text-muted-foreground">
 									NIIT always on (include 3.8% in LTCG rate)
 								</Label>
 							</div>
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-2.5">
 								<Switch
 									id="162m-toggle"
 									checked={taxInputs.section162mApplies}
@@ -228,7 +232,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 										onChange({ ...taxInputs, section162mApplies: v })
 									}
 								/>
-								<Label htmlFor="162m-toggle" className="text-sm cursor-pointer">
+								<Label htmlFor="162m-toggle" className="text-xs cursor-pointer text-muted-foreground">
 									IRC §162(m) applies (public co. — caps $1M salary deduction)
 								</Label>
 							</div>
