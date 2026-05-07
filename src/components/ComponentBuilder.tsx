@@ -154,7 +154,7 @@ export function ComponentBuilder({ pkg, onChange, onInfoClick }: Props) {
 								</option>
 							))}
 						</select>
-						<span className="text-xs text-muted-foreground font-mono text-center">
+						<span className="text-xs text-muted-foreground font-mono text-left">
 							{componentSummary(component)}
 						</span>
 						<button
