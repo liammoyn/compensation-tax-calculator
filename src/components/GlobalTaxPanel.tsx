@@ -292,6 +292,16 @@ export function GlobalTaxPanel({ taxInputs, onChange, onInfoClick }: Props) {
 								>
 									NIIT always on (include 3.8% in LTCG rate)
 								</Label>
+								{onInfoClick && (
+									<button
+										type="button"
+										onClick={() => onInfoClick("niitAlwaysOn")}
+										className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+										aria-label="Info about NIIT always on"
+									>
+										<Info className="h-3 w-3" />
+									</button>
+								)}
 							</div>
 							<div className="flex items-center gap-2.5">
 								<Switch
@@ -307,6 +317,16 @@ export function GlobalTaxPanel({ taxInputs, onChange, onInfoClick }: Props) {
 								>
 									IRC §162(m) applies (public co. — caps $1M salary deduction)
 								</Label>
+								{onInfoClick && (
+									<button
+										type="button"
+										onClick={() => onInfoClick("section162mApplies")}
+										className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+										aria-label="Info about IRC §162(m)"
+									>
+										<Info className="h-3 w-3" />
+									</button>
+								)}
 							</div>
 						</div>
 					</CardContent>

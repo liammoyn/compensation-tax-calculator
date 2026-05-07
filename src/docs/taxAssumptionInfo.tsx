@@ -351,4 +351,55 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 			</>
 		),
 	},
+
+	niitAlwaysOn: {
+		title: "NIIT Always On",
+		description: (
+			<>
+				<p>
+					When enabled, the <strong>3.8% Net Investment Income Tax (NIIT)</strong>{" "}
+					is added to all capital gains calculations regardless of your income
+					level. When disabled, NIIT is excluded entirely.
+				</p>
+				<p className="mt-3">
+					The NIIT technically applies only when your Modified Adjusted Gross
+					Income (MAGI) exceeds $200,000 (single) or $250,000 (married filing
+					jointly). This toggle lets you choose whether to assume you are above
+					that threshold.
+				</p>
+				<Callout>
+					<strong>Enable this toggle</strong> if your total income clearly
+					exceeds the MAGI thresholds. When on, your effective federal LTCG
+					rate becomes 23.8% (20% + 3.8%) rather than 20%.
+				</Callout>
+			</>
+		),
+	},
+
+	section162mApplies: {
+		title: "IRC §162(m) — $1M Deduction Cap",
+		description: (
+			<>
+				<p>
+					Section 162(m) of the Internal Revenue Code limits the{" "}
+					<strong>employer's tax deduction</strong> for compensation paid to
+					certain covered executives at public companies to{" "}
+					<strong>$1 million per person per year</strong>. Compensation above
+					$1M is not deductible, increasing the employer's true after-tax cost.
+				</p>
+				<p className="mt-3">
+					"Covered employees" generally include the CEO, CFO, and the three
+					other highest-paid officers. The cap applies to most forms of
+					compensation including salary, bonuses, and stock awards — with
+					limited exceptions for certain performance-based pay grandfathered
+					before 2018.
+				</p>
+				<Callout>
+					<strong>Enable this toggle for public companies</strong> when
+					modeling executive compensation above $1M. Leave it off for private
+					companies or when total annual compensation is below the cap.
+				</Callout>
+			</>
+		),
+	},
 };
