@@ -164,7 +164,10 @@ export function RestrictedStockForm({
 					checked={component.election83b}
 					onCheckedChange={(v) => onChange({ ...component, election83b: v })}
 				/>
-				<Label htmlFor="rs-83b" className="text-xs cursor-pointer text-muted-foreground">
+				<Label
+					htmlFor="rs-83b"
+					className="text-xs cursor-pointer text-muted-foreground"
+				>
 					83(b) Election filed at grant
 				</Label>
 			</div>

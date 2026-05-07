@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
-import type { TaxInputs } from "../types";
 import { TAX_INPUT_INFO } from "../docs/taxAssumptionInfo";
+import type { TaxInputs } from "../types";
 import { Button } from "./ui/button";
 
 interface Props {
@@ -15,8 +15,10 @@ export function InfoPanel({ field, onClose }: Props) {
 	return (
 		<>
 			{open && (
-				<div
-					className="fixed inset-0 z-30"
+				<button
+					type="button"
+					aria-label="Close panel"
+					className="fixed inset-0 z-30 cursor-default bg-transparent border-0 p-0"
 					onClick={onClose}
 					onKeyDown={(e) => e.key === "Escape" && onClose()}
 				/>

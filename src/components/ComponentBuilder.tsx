@@ -89,7 +89,11 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 
 	const addComponent = () => {
 		if (allFull) return;
-		onChange({ ...pkg, components: [...pkg.components, COMPONENT_DEFAULTS[availableTypes[0]!]()] });
+		onChange({
+			...pkg,
+			// biome-ignore lint/style/noNonNullAssertion: allFull guard above ensures availableTypes[0] exists
+		components: [...pkg.components, COMPONENT_DEFAULTS[availableTypes[0]!]()],
+		});
 	};
 
 	const changeComponentType = (i: number, type: CompComponent["type"]) => {
@@ -140,7 +144,9 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 							}
 							className="text-xs font-medium rounded border border-border bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring"
 						>
-							<option value={component.type}>{COMPONENT_LABELS[component.type]}</option>
+							<option value={component.type}>
+								{COMPONENT_LABELS[component.type]}
+							</option>
 							{ALL_TYPES.filter((t) => !usedTypes.has(t)).map((type) => (
 								<option key={type} value={type}>
 									{COMPONENT_LABELS[type]}

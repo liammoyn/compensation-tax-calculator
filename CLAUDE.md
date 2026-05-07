@@ -22,40 +22,11 @@ Default to using Bun instead of Node.js.
 
 Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+## Code Quality
 
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
+After any code change, always run both:
 
-With the following `frontend.tsx`:
+1. **Typecheck**: `bun tsc --noEmit` — uses `tsconfig.json` with strict mode enabled
+2. **Lint**: `bun run lint` — runs Biome lint on `./src`
 
-```tsx#frontend.tsx
-import React from "react";
-
-// import .css files directly and it works
-import './index.css';
-
-import { createRoot } from "react-dom/client";
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+Fix all errors before considering the task complete. Use `bun run lint:fix` to auto-fix lint issues, or `bun run check` to auto-fix both lint and formatting in one step.

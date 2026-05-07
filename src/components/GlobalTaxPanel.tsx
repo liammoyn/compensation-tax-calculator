@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { formatPercent } from "../lib/format";
 import { TAX_INPUT_INFO } from "../docs/taxAssumptionInfo";
+import { formatPercent } from "../lib/format";
 import type { TaxInputs } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import {
@@ -47,7 +47,10 @@ function PctField({
 	return (
 		<div className="space-y-1.5">
 			<div className="flex items-center gap-1">
-				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70" title={tooltip}>
+				<Label
+					className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70"
+					title={tooltip}
+				>
 					{label}
 				</Label>
 				{hasInfo && onInfoClick && (
@@ -104,7 +107,9 @@ function DollarField({
 	return (
 		<div className="space-y-1.5">
 			<div className="flex items-center gap-1">
-				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">{label}</Label>
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+					{label}
+				</Label>
 				{hasInfo && onInfoClick && (
 					<button
 						type="button"
@@ -281,7 +286,10 @@ export function GlobalTaxPanel({ taxInputs, onChange, onInfoClick }: Props) {
 										onChange({ ...taxInputs, niitAlwaysOn: v })
 									}
 								/>
-								<Label htmlFor="niit-toggle" className="text-xs cursor-pointer text-muted-foreground">
+								<Label
+									htmlFor="niit-toggle"
+									className="text-xs cursor-pointer text-muted-foreground"
+								>
 									NIIT always on (include 3.8% in LTCG rate)
 								</Label>
 							</div>
@@ -293,7 +301,10 @@ export function GlobalTaxPanel({ taxInputs, onChange, onInfoClick }: Props) {
 										onChange({ ...taxInputs, section162mApplies: v })
 									}
 								/>
-								<Label htmlFor="162m-toggle" className="text-xs cursor-pointer text-muted-foreground">
+								<Label
+									htmlFor="162m-toggle"
+									className="text-xs cursor-pointer text-muted-foreground"
+								>
 									IRC §162(m) applies (public co. — caps $1M salary deduction)
 								</Label>
 							</div>

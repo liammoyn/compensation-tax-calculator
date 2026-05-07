@@ -65,7 +65,9 @@ export function VestingScheduleEditor({
 				>
 					<div className="flex-1 grid grid-cols-3 gap-1.5">
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Year</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Year
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -78,7 +80,9 @@ export function VestingScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Mo.</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Mo.
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -96,7 +100,9 @@ export function VestingScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Frac.</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Frac.
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -111,7 +117,8 @@ export function VestingScheduleEditor({
 						</div>
 					</div>
 					<div className="text-[11px] text-muted-foreground/60 pt-5 w-20 text-right font-mono">
-						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()} sh
+						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()}{" "}
+						sh
 					</div>
 					<button
 						type="button"
@@ -194,7 +201,9 @@ export function ExerciseScheduleEditor({
 				>
 					<div className="flex-1 grid grid-cols-3 gap-1.5">
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Year</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Year
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -207,7 +216,9 @@ export function ExerciseScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Mo.</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Mo.
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -225,7 +236,9 @@ export function ExerciseScheduleEditor({
 							/>
 						</div>
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Frac.</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Frac.
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -240,7 +253,8 @@ export function ExerciseScheduleEditor({
 						</div>
 					</div>
 					<div className="text-[11px] text-muted-foreground/60 pt-5 w-20 text-right font-mono">
-						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()} sh
+						{Math.round(event.sharesFraction * sharesGranted).toLocaleString()}{" "}
+						sh
 					</div>
 					<button
 						type="button"
@@ -287,7 +301,9 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 			<div className="flex items-center justify-between">
 				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
 					Payment Schedule
-					<span className="normal-case tracking-normal font-normal text-muted-foreground/50 ml-1">(optional)</span>
+					<span className="normal-case tracking-normal font-normal text-muted-foreground/50 ml-1">
+						(optional)
+					</span>
 				</Label>
 				<Button
 					size="sm"
@@ -305,7 +321,9 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 				>
 					<div className="flex-1 grid grid-cols-3 gap-1.5">
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Year</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Year
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -318,7 +336,9 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 							/>
 						</div>
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Mo.</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Mo.
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"
@@ -336,7 +356,9 @@ export function PaymentScheduleEditor({ schedule, onChange }: PaymentProps) {
 							/>
 						</div>
 						<div>
-							<Label className="text-[10px] text-muted-foreground/60 font-mono">Frac.</Label>
+							<Label className="text-[10px] text-muted-foreground/60 font-mono">
+								Frac.
+							</Label>
 							<Input
 								className="h-7 text-xs font-mono"
 								type="number"

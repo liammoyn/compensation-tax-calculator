@@ -196,7 +196,11 @@ export function ComparisonView({ packages, globalTaxInputs }: Props) {
 										tick={{ fontSize: 10 }}
 										width={60}
 									/>
-									<Tooltip formatter={(v) => typeof v === "number" ? formatCurrency(v) : ""} />
+									<Tooltip
+										formatter={(v) =>
+											typeof v === "number" ? formatCurrency(v) : ""
+										}
+									/>
 									<Legend />
 									{results.map(({ pkg }, pi) =>
 										(["downside", "base", "upside"] as const).map(

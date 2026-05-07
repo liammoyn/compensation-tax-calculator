@@ -1,5 +1,5 @@
-import { DEFAULT_TAX_INPUTS } from "../types";
 import type { Package, TaxInputs } from "../types";
+import { DEFAULT_TAX_INPUTS } from "../types";
 import type { Store } from "./interface";
 
 const PACKAGES_KEY = "comp-tax-plan:packages";

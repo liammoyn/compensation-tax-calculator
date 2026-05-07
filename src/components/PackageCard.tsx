@@ -18,6 +18,14 @@ import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
 import { Switch } from "./ui/switch";
 
+function toRaw(r: { downside: number; base: number; upside: number }) {
+	return {
+		downside: (r.downside * 100).toFixed(1),
+		base: (r.base * 100).toFixed(1),
+		upside: (r.upside * 100).toFixed(1),
+	};
+}
+
 function ScenarioRateFields({
 	label,
 	rates,
@@ -27,11 +35,6 @@ function ScenarioRateFields({
 	rates: { downside: number; base: number; upside: number };
 	onChange: (r: { downside: number; base: number; upside: number }) => void;
 }) {
-	const toRaw = (r: typeof rates) => ({
-		downside: (r.downside * 100).toFixed(1),
-		base: (r.base * 100).toFixed(1),
-		upside: (r.upside * 100).toFixed(1),
-	});
 	const [raw, setRaw] = useState(toRaw(rates));
 	const [focused, setFocused] = useState<string | null>(null);
 
@@ -41,14 +44,18 @@ function ScenarioRateFields({
 
 	return (
 		<div className="space-y-1.5">
-			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">{label}</Label>
+			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+				{label}
+			</Label>
 			<div className="grid grid-cols-3 gap-1">
 				{(["downside", "base", "upside"] as const).map((s) => (
 					<div key={s} className="relative">
 						<Input
 							className="h-7 text-xs pr-4 font-mono"
 							value={raw[s]}
-							onChange={(e) => setRaw((prev) => ({ ...prev, [s]: e.target.value }))}
+							onChange={(e) =>
+								setRaw((prev) => ({ ...prev, [s]: e.target.value }))
+							}
 							onFocus={() => setFocused(s)}
 							onBlur={() => {
 								setFocused(null);
@@ -61,9 +68,15 @@ function ScenarioRateFields({
 						</span>
 					</div>
 				))}
-				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">↓ dn</div>
-				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">base</div>
-				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">↑↑ up</div>
+				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">
+					↓ dn
+				</div>
+				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">
+					base
+				</div>
+				<div className="text-[10px] text-muted-foreground/50 text-center pt-0.5 font-mono">
+					↑↑ up
+				</div>
 			</div>
 		</div>
 	);

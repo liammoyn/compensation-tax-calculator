@@ -31,7 +31,9 @@ export function App() {
 	const [globalTaxInputs, setGlobalTaxInputs] =
 		useState<TaxInputs>(DEFAULT_TAX_INPUTS);
 	const [loading, setLoading] = useState(true);
-	const [infoPanelField, setInfoPanelField] = useState<keyof TaxInputs | null>(null);
+	const [infoPanelField, setInfoPanelField] = useState<keyof TaxInputs | null>(
+		null,
+	);
 
 	const pkgSaveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
 		new Map(),
@@ -133,7 +135,10 @@ export function App() {
 
 	return (
 		<div className="min-h-screen bg-background w-full">
-			<InfoPanel field={infoPanelField} onClose={() => setInfoPanelField(null)} />
+			<InfoPanel
+				field={infoPanelField}
+				onClose={() => setInfoPanelField(null)}
+			/>
 			<header className="border-b bg-card/90 backdrop-blur sticky top-0 z-20">
 				<div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
 					<div className="flex items-center gap-3">
@@ -176,9 +181,15 @@ export function App() {
 			<div className="max-w-7xl mx-auto px-5 py-6">
 				<Tabs defaultValue="builder">
 					<TabsList className="mb-6 h-9 bg-muted/60">
-						<TabsTrigger value="builder" className="text-xs tracking-wide">Builder</TabsTrigger>
-						<TabsTrigger value="compare" className="text-xs tracking-wide">Compare</TabsTrigger>
-						<TabsTrigger value="timeline" className="text-xs tracking-wide">Timeline</TabsTrigger>
+						<TabsTrigger value="builder" className="text-xs tracking-wide">
+							Builder
+						</TabsTrigger>
+						<TabsTrigger value="compare" className="text-xs tracking-wide">
+							Compare
+						</TabsTrigger>
+						<TabsTrigger value="timeline" className="text-xs tracking-wide">
+							Timeline
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="builder">

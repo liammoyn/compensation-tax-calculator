@@ -119,7 +119,11 @@ export function PackageResultSummary({ result }: Props) {
 							tick={{ fontSize: 10 }}
 							width={56}
 						/>
-						<Tooltip formatter={(v) => typeof v === "number" ? formatCurrency(v) : ""} />
+						<Tooltip
+							formatter={(v) =>
+								typeof v === "number" ? formatCurrency(v) : ""
+							}
+						/>
 						{result.map(
 							(sr) =>
 								activeScenarios.has(sr.scenario) && (
