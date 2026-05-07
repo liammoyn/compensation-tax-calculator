@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatPercent } from "../lib/format";
 import type { TaxInputs } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -30,7 +30,14 @@ function PctField({
 	onChange: (t: TaxInputs) => void;
 	tooltip?: string;
 }) {
-	const value = taxInputs[field] as number;
+	const committedValue = taxInputs[field] as number;
+	const [raw, setRaw] = useState((committedValue * 100).toFixed(2));
+	const [focused, setFocused] = useState(false);
+
+	useEffect(() => {
+		if (!focused) setRaw((committedValue * 100).toFixed(2));
+	}, [committedValue, focused]);
+
 	return (
 		<div className="space-y-1.5">
 			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70" title={tooltip}>
@@ -39,10 +46,17 @@ function PctField({
 			<div className="relative">
 				<Input
 					className="pr-7 h-8 text-sm font-mono"
-					value={(value * 100).toFixed(2)}
-					onChange={(e) => {
-						const n = parseFloat(e.target.value) / 100;
-						if (!Number.isNaN(n)) onChange({ ...taxInputs, [field]: n });
+					value={raw}
+					onChange={(e) => setRaw(e.target.value)}
+					onFocus={() => setFocused(true)}
+					onBlur={() => {
+						setFocused(false);
+						const n = parseFloat(raw) / 100;
+						if (!Number.isNaN(n)) {
+							onChange({ ...taxInputs, [field]: n });
+						} else {
+							onChange({ ...taxInputs, [field]: 0 });
+						}
 					}}
 				/>
 				<span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">

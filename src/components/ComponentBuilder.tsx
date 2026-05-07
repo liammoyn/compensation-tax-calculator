@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { COMPONENT_LABELS, formatCurrency } from "../lib/format";
 import type { CompComponent, Package } from "../types";
 import { CURRENT_YEAR } from "../types";
@@ -95,9 +95,68 @@ interface Props {
 	onChange: (pkg: Package) => void;
 }
 
+function TypeSwitcher({
+	current,
+	onSelect,
+}: {
+	current: CompComponent["type"];
+	onSelect: (type: CompComponent["type"]) => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const ref = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!open) return;
+		const handler = (e: MouseEvent) => {
+			if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+		};
+		document.addEventListener("mousedown", handler);
+		return () => document.removeEventListener("mousedown", handler);
+	}, [open]);
+
+	return (
+		<div className="relative" ref={ref}>
+			<button
+				type="button"
+				onClick={(e) => {
+					e.stopPropagation();
+					setOpen((v) => !v);
+				}}
+				className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide transition-opacity hover:opacity-80 ${BADGE_COLORS[current]}`}
+				title="Change component type"
+			>
+				{COMPONENT_LABELS[current]}
+			</button>
+			{open && (
+				<div className="absolute top-full left-0 z-20 mt-1 w-44 rounded-lg border bg-popover shadow-lg overflow-hidden">
+					{(Object.keys(COMPONENT_LABELS) as CompComponent["type"][])
+						.filter((t) => t !== current)
+						.map((type) => (
+							<button
+								type="button"
+								key={type}
+								className="flex w-full items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/60 transition-colors"
+								onClick={(e) => {
+									e.stopPropagation();
+									onSelect(type);
+									setOpen(false);
+								}}
+							>
+								<span
+									className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${BADGE_COLORS[type]}`}
+								>
+									{COMPONENT_LABELS[type]}
+								</span>
+							</button>
+						))}
+				</div>
+			)}
+		</div>
+	);
+}
+
 export function ComponentBuilder({ pkg, onChange }: Props) {
 	const [openComponents, setOpenComponents] = useState<Set<number>>(new Set());
-	const [showMenu, setShowMenu] = useState(false);
 
 	const toggleComponent = (i: number) => {
 		setOpenComponents((prev) => {
@@ -108,12 +167,20 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 		});
 	};
 
-	const addComponent = (type: CompComponent["type"]) => {
-		const newComponent = COMPONENT_DEFAULTS[type]();
+	const addComponent = () => {
+		const newComponent = COMPONENT_DEFAULTS.cash_salary();
 		const newComponents = [...pkg.components, newComponent];
 		onChange({ ...pkg, components: newComponents });
 		setOpenComponents((prev) => new Set([...prev, newComponents.length - 1]));
-		setShowMenu(false);
+	};
+
+	const changeComponentType = (i: number, type: CompComponent["type"]) => {
+		onChange({
+			...pkg,
+			components: pkg.components.map((c, idx) =>
+				idx === i ? COMPONENT_DEFAULTS[type]() : c,
+			),
+		});
 	};
 
 	const updateComponent = (i: number, component: CompComponent) => {
@@ -168,11 +235,10 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 									) : (
 										<ChevronRight className="h-3 w-3 text-muted-foreground/50" />
 									)}
-									<span
-										className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${BADGE_COLORS[component.type]}`}
-									>
-										{COMPONENT_LABELS[component.type]}
-									</span>
+									<TypeSwitcher
+										current={component.type}
+										onSelect={(type) => changeComponentType(i, type)}
+									/>
 									<span className="text-xs text-muted-foreground font-mono">
 										{componentSummary(component)}
 									</span>
@@ -201,35 +267,15 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 				</Collapsible>
 			))}
 
-			<div className="relative pt-1">
+			<div className="pt-1">
 				<Button
 					variant="outline"
 					size="sm"
 					className="w-full h-8 text-xs text-muted-foreground border-dashed hover:border-solid hover:text-foreground transition-all"
-					onClick={() => setShowMenu(!showMenu)}
+					onClick={addComponent}
 				>
 					<Plus className="h-3.5 w-3.5 mr-1.5" /> Add Component
 				</Button>
-				{showMenu && (
-					<div className="absolute top-full left-0 z-10 mt-1 w-52 rounded-lg border bg-popover shadow-lg overflow-hidden">
-						{(Object.keys(COMPONENT_LABELS) as CompComponent["type"][]).map(
-							(type) => (
-								<button
-									type="button"
-									key={type}
-									className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-muted/60 transition-colors"
-									onClick={() => addComponent(type)}
-								>
-									<span
-										className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${BADGE_COLORS[type]}`}
-									>
-										{COMPONENT_LABELS[type]}
-									</span>
-								</button>
-							),
-						)}
-					</div>
-				)}
 			</div>
 		</div>
 	);

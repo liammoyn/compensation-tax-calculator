@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, Copy, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { evaluatePackage } from "../engine";
 import { formatCurrency } from "../lib/format";
 import type { Package, TaxInputs } from "../types";
@@ -27,6 +27,18 @@ function ScenarioRateFields({
 	rates: { downside: number; base: number; upside: number };
 	onChange: (r: { downside: number; base: number; upside: number }) => void;
 }) {
+	const toRaw = (r: typeof rates) => ({
+		downside: (r.downside * 100).toFixed(1),
+		base: (r.base * 100).toFixed(1),
+		upside: (r.upside * 100).toFixed(1),
+	});
+	const [raw, setRaw] = useState(toRaw(rates));
+	const [focused, setFocused] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!focused) setRaw(toRaw(rates));
+	}, [rates, focused]);
+
 	return (
 		<div className="space-y-1.5">
 			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">{label}</Label>
@@ -35,10 +47,13 @@ function ScenarioRateFields({
 					<div key={s} className="relative">
 						<Input
 							className="h-7 text-xs pr-4 font-mono"
-							value={(rates[s] * 100).toFixed(1)}
-							onChange={(e) => {
-								const n = parseFloat(e.target.value) / 100;
-								if (!Number.isNaN(n)) onChange({ ...rates, [s]: n });
+							value={raw[s]}
+							onChange={(e) => setRaw((prev) => ({ ...prev, [s]: e.target.value }))}
+							onFocus={() => setFocused(s)}
+							onBlur={() => {
+								setFocused(null);
+								const n = parseFloat(raw[s]) / 100;
+								onChange({ ...rates, [s]: Number.isNaN(n) ? 0 : n });
 							}}
 						/>
 						<span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground/60 font-mono">
