@@ -41,10 +41,8 @@ export function InfoPanel({ field, onClose }: Props) {
 						<X className="h-4 w-4" />
 					</Button>
 				</div>
-				<div className="flex-1 overflow-y-auto px-5 py-4">
-					<p className="text-sm text-muted-foreground leading-relaxed">
-						{info?.description}
-					</p>
+				<div className="flex-1 overflow-y-auto px-5 py-4 text-sm text-muted-foreground leading-relaxed">
+					{info?.description}
 				</div>
 			</div>
 		</>
