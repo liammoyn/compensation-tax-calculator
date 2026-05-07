@@ -88,6 +88,7 @@ interface Props {
 	onChange: (pkg: Package) => void;
 	onDelete: () => void;
 	onDuplicate: () => void;
+	onInfoClick?: (field: keyof TaxInputs) => void;
 }
 
 export function PackageCard({
@@ -96,6 +97,7 @@ export function PackageCard({
 	onChange,
 	onDelete,
 	onDuplicate,
+	onInfoClick,
 }: Props) {
 	const [taxOverrideOpen, setTaxOverrideOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(true);
@@ -286,6 +288,7 @@ export function PackageCard({
 								<GlobalTaxPanel
 									taxInputs={pkg.taxInputs}
 									onChange={(t) => onChange({ ...pkg, taxInputs: t })}
+									onInfoClick={onInfoClick}
 								/>
 							)}
 						</div>

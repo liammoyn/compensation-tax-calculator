@@ -208,6 +208,7 @@ export function App() {
 										onChange={updatePackage}
 										onDelete={() => deletePackage(pkg.id)}
 										onDuplicate={() => duplicatePackage(pkg)}
+										onInfoClick={setInfoPanelField}
 									/>
 								))}
 							</div>

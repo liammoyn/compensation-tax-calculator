@@ -26,7 +26,7 @@ Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully suppor
 
 After any code change, always run both:
 
-1. **Typecheck**: `bun tsc --noEmit` — uses `tsconfig.json` with strict mode enabled
+1. **Typecheck**: `bunx tsc --noEmit` — uses `tsconfig.json` with strict mode enabled
 2. **Lint**: `bun run lint` — runs Biome lint on `./src`
 
 Fix all errors before considering the task complete. Use `bun run lint:fix` to auto-fix lint issues, or `bun run check` to auto-fix both lint and formatting in one step.
