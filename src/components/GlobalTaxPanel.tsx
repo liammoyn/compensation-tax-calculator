@@ -1,6 +1,7 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatPercent } from "../lib/format";
+import { TAX_INPUT_INFO } from "../docs/taxAssumptionInfo";
 import type { TaxInputs } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import {
@@ -15,6 +16,7 @@ import { Switch } from "./ui/switch";
 interface Props {
 	taxInputs: TaxInputs;
 	onChange: (taxInputs: TaxInputs) => void;
+	onInfoClick?: (field: keyof TaxInputs) => void;
 }
 
 function PctField({
@@ -23,12 +25,14 @@ function PctField({
 	taxInputs,
 	onChange,
 	tooltip,
+	onInfoClick,
 }: {
 	label: string;
 	field: keyof TaxInputs;
 	taxInputs: TaxInputs;
 	onChange: (t: TaxInputs) => void;
 	tooltip?: string;
+	onInfoClick?: (field: keyof TaxInputs) => void;
 }) {
 	const committedValue = taxInputs[field] as number;
 	const [raw, setRaw] = useState((committedValue * 100).toFixed(2));
@@ -38,11 +42,25 @@ function PctField({
 		if (!focused) setRaw((committedValue * 100).toFixed(2));
 	}, [committedValue, focused]);
 
+	const hasInfo = field in TAX_INPUT_INFO;
+
 	return (
 		<div className="space-y-1.5">
-			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70" title={tooltip}>
-				{label}
-			</Label>
+			<div className="flex items-center gap-1">
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70" title={tooltip}>
+					{label}
+				</Label>
+				{hasInfo && onInfoClick && (
+					<button
+						type="button"
+						onClick={() => onInfoClick(field)}
+						className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+						aria-label={`Info about ${label}`}
+					>
+						<Info className="h-3 w-3" />
+					</button>
+				)}
+			</div>
 			<div className="relative">
 				<Input
 					className="pr-7 h-8 text-sm font-mono"
@@ -72,16 +90,32 @@ function DollarField({
 	field,
 	taxInputs,
 	onChange,
+	onInfoClick,
 }: {
 	label: string;
 	field: keyof TaxInputs;
 	taxInputs: TaxInputs;
 	onChange: (t: TaxInputs) => void;
+	onInfoClick?: (field: keyof TaxInputs) => void;
 }) {
 	const value = taxInputs[field] as number;
+	const hasInfo = field in TAX_INPUT_INFO;
+
 	return (
 		<div className="space-y-1.5">
-			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">{label}</Label>
+			<div className="flex items-center gap-1">
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">{label}</Label>
+				{hasInfo && onInfoClick && (
+					<button
+						type="button"
+						onClick={() => onInfoClick(field)}
+						className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+						aria-label={`Info about ${label}`}
+					>
+						<Info className="h-3 w-3" />
+					</button>
+				)}
+			</div>
 			<div className="relative">
 				<span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">
 					$
@@ -99,7 +133,7 @@ function DollarField({
 	);
 }
 
-export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
+export function GlobalTaxPanel({ taxInputs, onChange, onInfoClick }: Props) {
 	const [open, setOpen] = useState(true);
 
 	const summary = `Fed ${formatPercent(taxInputs.federalOrdinaryRate)} | LTCG ${formatPercent(taxInputs.federalLTCGRate)} | State ${formatPercent(taxInputs.stateOrdinaryRate)} | FICA ${formatPercent(taxInputs.ficaRate)}`;
@@ -142,6 +176,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Marginal federal rate on wages and ordinary income"
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="Federal LTCG"
@@ -149,6 +184,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="0%, 15%, or 20%"
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="AMT Rate"
@@ -156,6 +192,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="26% or 28% (reserved for v1.1 ISO qualified disposition)"
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="FICA Rate"
@@ -163,6 +200,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Employee-side FICA: 7.65% up to SS wage base, 1.45% above"
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="Add. Medicare"
@@ -170,24 +208,28 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="0.9% employee-only above threshold"
+								onInfoClick={onInfoClick}
 							/>
 							<DollarField
 								label="Medicare Threshold"
 								field="additionalMedicareThreshold"
 								taxInputs={taxInputs}
 								onChange={onChange}
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="State Ordinary"
 								field="stateOrdinaryRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="State LTCG"
 								field="stateLTCGRate"
 								taxInputs={taxInputs}
 								onChange={onChange}
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="NIIT Rate"
@@ -195,6 +237,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Net Investment Income Tax — included when NIIT toggle is on"
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="Corporate Rate"
@@ -202,6 +245,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Employer marginal corporate tax rate"
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="Employee Disc. Rate"
@@ -209,6 +253,7 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Employee required rate of return for NPV"
+								onInfoClick={onInfoClick}
 							/>
 							<PctField
 								label="Employer Disc. Rate"
@@ -216,12 +261,14 @@ export function GlobalTaxPanel({ taxInputs, onChange }: Props) {
 								taxInputs={taxInputs}
 								onChange={onChange}
 								tooltip="Employer cost of capital for NPV"
+								onInfoClick={onInfoClick}
 							/>
 							<DollarField
 								label="SS Wage Base"
 								field="ssWageBase"
 								taxInputs={taxInputs}
 								onChange={onChange}
+								onInfoClick={onInfoClick}
 							/>
 						</div>
 
