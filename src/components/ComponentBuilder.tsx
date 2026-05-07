@@ -89,7 +89,7 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 
 	const addComponent = () => {
 		if (allFull) return;
-		onChange({ ...pkg, components: [...pkg.components, COMPONENT_DEFAULTS[availableTypes[0]]()] });
+		onChange({ ...pkg, components: [...pkg.components, COMPONENT_DEFAULTS[availableTypes[0]!]()] });
 	};
 
 	const changeComponentType = (i: number, type: CompComponent["type"]) => {

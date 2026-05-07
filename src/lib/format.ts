@@ -35,7 +35,9 @@ export function parsePercent(value: string): number {
 	return parseFloat(value.replace(/%/g, "")) / 100 || 0;
 }
 
-export const COMPONENT_LABELS: Record<string, string> = {
+import type { CompComponent } from "../types";
+
+export const COMPONENT_LABELS: Record<CompComponent["type"], string> = {
 	cash_salary: "Cash Salary",
 	cash_bonus: "Cash Bonus",
 	rs: "Restricted Stock",

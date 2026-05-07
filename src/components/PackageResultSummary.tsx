@@ -42,14 +42,13 @@ export function PackageResultSummary({ result }: Props) {
 	};
 
 	const chartData =
-		result[0]?.yearlyRows.map((_, rowIdx) => {
-			const row: Record<string, number | string> = {
-				year: result[0].yearlyRows[rowIdx].year,
-			};
+		result[0]?.yearlyRows.map((row0, rowIdx) => {
+			const row: Record<string, number | string> = { year: row0.year };
 			result.forEach((sr) => {
-				row[`employee_${sr.scenario}`] =
-					sr.yearlyRows[rowIdx].employeeAfterTaxCash;
-				row[`employer_${sr.scenario}`] = sr.yearlyRows[rowIdx].employerNetCost;
+				const yr = sr.yearlyRows[rowIdx];
+				if (yr === undefined) return;
+				row[`employee_${sr.scenario}`] = yr.employeeAfterTaxCash;
+				row[`employer_${sr.scenario}`] = yr.employerNetCost;
 			});
 			return row;
 		}) ?? [];
@@ -120,7 +119,7 @@ export function PackageResultSummary({ result }: Props) {
 							tick={{ fontSize: 10 }}
 							width={56}
 						/>
-						<Tooltip formatter={(v: number) => formatCurrency(v)} />
+						<Tooltip formatter={(v) => typeof v === "number" ? formatCurrency(v) : ""} />
 						{result.map(
 							(sr) =>
 								activeScenarios.has(sr.scenario) && (

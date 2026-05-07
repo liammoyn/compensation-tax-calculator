@@ -33,7 +33,7 @@ Example:
   process.exit(0);
 }
 
-const toCamelCase = (str: string): string => str.replace(/-([a-z])/g, g => g[1].toUpperCase());
+const toCamelCase = (str: string): string => str.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 const parseValue = (value: string): any => {
   if (value === "true") return true;
@@ -49,6 +49,7 @@ const parseValue = (value: string): any => {
 
 function parseArgs(): Partial<Bun.BuildConfig> {
   const config: Partial<Bun.BuildConfig> = {};
+  const dynConfig = config as Record<string, unknown>;
   const args = process.argv.slice(2);
 
   for (let i = 0; i < args.length; i++) {
@@ -58,13 +59,13 @@ function parseArgs(): Partial<Bun.BuildConfig> {
 
     if (arg.startsWith("--no-")) {
       const key = toCamelCase(arg.slice(5));
-      config[key] = false;
+      dynConfig[key] = false;
       continue;
     }
 
     if (!arg.includes("=") && (i === args.length - 1 || args[i + 1]?.startsWith("--"))) {
       const key = toCamelCase(arg.slice(2));
-      config[key] = true;
+      dynConfig[key] = true;
       continue;
     }
 
@@ -82,10 +83,12 @@ function parseArgs(): Partial<Bun.BuildConfig> {
 
     if (key.includes(".")) {
       const [parentKey, childKey] = key.split(".");
-      config[parentKey] = config[parentKey] || {};
-      config[parentKey][childKey] = parseValue(value);
+      if (parentKey === undefined || childKey === undefined) continue;
+      const parent = (dynConfig[parentKey] ?? {}) as Record<string, unknown>;
+      dynConfig[parentKey] = parent;
+      parent[childKey] = parseValue(value);
     } else {
-      config[key] = parseValue(value);
+      dynConfig[key] = parseValue(value);
     }
   }
 
