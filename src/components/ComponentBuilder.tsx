@@ -92,7 +92,7 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 		onChange({
 			...pkg,
 			// biome-ignore lint/style/noNonNullAssertion: allFull guard above ensures availableTypes[0] exists
-		components: [...pkg.components, COMPONENT_DEFAULTS[availableTypes[0]!]()],
+			components: [...pkg.components, COMPONENT_DEFAULTS[availableTypes[0]!]()],
 		});
 	};
 
@@ -134,9 +134,9 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 							? `${component.type}-${component.grantDate}`
 							: `${component.type}-${i}`
 					}
-					className="border rounded-lg overflow-hidden"
+					className="border-l-2 border-l-primary/30 border border-border rounded-lg overflow-hidden"
 				>
-					<div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-muted/10">
+					<div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-muted/50">
 						<select
 							value={component.type}
 							onChange={(e) =>

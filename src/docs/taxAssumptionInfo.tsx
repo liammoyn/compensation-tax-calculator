@@ -52,8 +52,8 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					rate rather than your ordinary income rate.
 				</p>
 				<p className="mt-3">
-					The federal LTCG rate is fixed at 0%, 15%, or 20% — it does not
-					follow the same brackets as ordinary income.
+					The federal LTCG rate is fixed at 0%, 15%, or 20% — it does not follow
+					the same brackets as ordinary income.
 				</p>
 				<Callout>
 					<strong>Common US values:</strong>
@@ -112,9 +112,7 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					and your employer each pay this rate separately — it is not split
 					between you.
 				</p>
-				<p className="mt-3">
-					The 7.65% rate breaks down as:
-				</p>
+				<p className="mt-3">The 7.65% rate breaks down as:</p>
 				<ul className="mt-1 ml-4 list-disc space-y-1">
 					<li>
 						<strong>6.2%</strong> Social Security — applies only up to the SS
@@ -125,8 +123,8 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					</li>
 				</ul>
 				<p className="mt-3">
-					Above the SS wage base, only the 1.45% Medicare portion continues.
-					The tool automatically blends these rates based on your income level.
+					Above the SS wage base, only the 1.45% Medicare portion continues. The
+					tool automatically blends these rates based on your income level.
 				</p>
 				<Callout>
 					<strong>Default: 7.65%</strong> (the full per-side rate). Leave this
@@ -251,8 +249,8 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 				</p>
 				<Callout>
 					<strong>Default: 3.8%.</strong> This tax applies when your Modified
-					Adjusted Gross Income (MAGI) exceeds $200k (single) or $250k (MFJ).
-					If your income is clearly above those thresholds, enable the toggle.
+					Adjusted Gross Income (MAGI) exceeds $200k (single) or $250k (MFJ). If
+					your income is clearly above those thresholds, enable the toggle.
 				</Callout>
 			</>
 		),

@@ -156,7 +156,7 @@ export function PackageCard({
 						</span>
 					</CollapsibleTrigger>
 					<CollapsibleContent>
-						<div className="mt-3 space-y-4">
+						<div className="mt-3 space-y-4 bg-muted/30 rounded-lg px-3 py-3">
 							<div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
 								<div className="space-y-1.5">
 									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
@@ -295,7 +295,7 @@ export function PackageCard({
 				<Separator className="opacity-50" />
 
 				{/* Component Builder */}
-				<div className="space-y-2.5">
+				<div className="space-y-2.5 rounded-lg px-3 py-3 border border-border/50">
 					<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
 						Compensation Components
 					</p>
@@ -306,7 +306,7 @@ export function PackageCard({
 				{pkg.components.length > 0 && (
 					<>
 						<Separator className="opacity-50" />
-						<div className="space-y-3">
+						<div className="space-y-3 bg-accent/20 rounded-lg px-3 py-3">
 							<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
 								Results
 							</p>
