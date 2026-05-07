@@ -78,11 +78,12 @@ function componentSummary(c: CompComponent): string {
 interface Props {
 	pkg: Package;
 	onChange: (pkg: Package) => void;
+	onInfoClick?: (key: string) => void;
 }
 
 const ALL_TYPES = Object.keys(COMPONENT_LABELS) as CompComponent["type"][];
 
-export function ComponentBuilder({ pkg, onChange }: Props) {
+export function ComponentBuilder({ pkg, onChange, onInfoClick }: Props) {
 	const usedTypes = new Set(pkg.components.map((c) => c.type));
 	const availableTypes = ALL_TYPES.filter((t) => !usedTypes.has(t));
 	const allFull = availableTypes.length === 0;
@@ -168,6 +169,7 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 						<ComponentForm
 							component={component}
 							onChange={(c) => updateComponent(i, c)}
+							onInfoClick={onInfoClick}
 						/>
 					</div>
 				</div>

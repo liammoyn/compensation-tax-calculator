@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
 import type React from "react";
 import { isoShareSplit } from "../../engine/iso";
 import type {
@@ -29,16 +29,32 @@ import {
 
 function Field({
 	label,
+	infoKey,
+	onInfoClick,
 	children,
 }: {
 	label: string;
+	infoKey?: string;
+	onInfoClick?: (key: string) => void;
 	children: React.ReactNode;
 }) {
 	return (
 		<div className="space-y-1.5">
-			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-				{label}
-			</Label>
+			<div className="flex items-center gap-1">
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+					{label}
+				</Label>
+				{infoKey && onInfoClick && (
+					<button
+						type="button"
+						onClick={() => onInfoClick(infoKey)}
+						className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+						aria-label={`Info about ${label}`}
+					>
+						<Info className="h-3 w-3" />
+					</button>
+				)}
+			</div>
 			{children}
 		</div>
 	);
@@ -73,13 +89,15 @@ function DollarInput({
 export function CashSalaryForm({
 	component,
 	onChange,
+	onInfoClick,
 }: {
 	component: CashSalary;
 	onChange: (c: CashSalary) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	return (
 		<div className="space-y-3">
-			<Field label="Annual Base Salary">
+			<Field label="Annual Base Salary" infoKey="comp.annualBaseSalary" onInfoClick={onInfoClick}>
 				<DollarInput
 					value={component.annualAmount}
 					onChange={(v) => onChange({ ...component, annualAmount: v })}
@@ -94,13 +112,15 @@ export function CashSalaryForm({
 export function CashBonusForm({
 	component,
 	onChange,
+	onInfoClick,
 }: {
 	component: CashBonus;
 	onChange: (c: CashBonus) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	return (
 		<div className="space-y-3">
-			<Field label="Target Bonus Amount (annual)">
+			<Field label="Target Bonus Amount (annual)" infoKey="comp.targetBonusAmount" onInfoClick={onInfoClick}>
 				<DollarInput
 					value={component.targetAmount}
 					onChange={(v) => onChange({ ...component, targetAmount: v })}
@@ -121,14 +141,16 @@ export function CashBonusForm({
 export function RestrictedStockForm({
 	component,
 	onChange,
+	onInfoClick,
 }: {
 	component: RestrictedStock;
 	onChange: (c: RestrictedStock) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	return (
 		<div className="space-y-3">
 			<div className="grid grid-cols-2 gap-3">
-				<Field label="Shares Granted">
+				<Field label="Shares Granted" infoKey="comp.sharesGranted" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="number"
@@ -141,13 +163,13 @@ export function RestrictedStockForm({
 						}
 					/>
 				</Field>
-				<Field label="Grant FMV per Share">
+				<Field label="Grant FMV per Share" infoKey="comp.grantFMV" onInfoClick={onInfoClick}>
 					<DollarInput
 						value={component.grantFMV}
 						onChange={(v) => onChange({ ...component, grantFMV: v })}
 					/>
 				</Field>
-				<Field label="Grant Date">
+				<Field label="Grant Date" infoKey="comp.grantDate" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="date"
@@ -170,6 +192,16 @@ export function RestrictedStockForm({
 				>
 					83(b) Election filed at grant
 				</Label>
+				{onInfoClick && (
+					<button
+						type="button"
+						onClick={() => onInfoClick("comp.election83b")}
+						className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+						aria-label="Info about 83(b) Election"
+					>
+						<Info className="h-3 w-3" />
+					</button>
+				)}
 			</div>
 			{component.election83b && (
 				<p className="text-xs text-primary/80 bg-accent/60 border border-accent px-3 py-2 rounded-md">
@@ -193,14 +225,16 @@ export function RestrictedStockForm({
 export function RSUForm({
 	component,
 	onChange,
+	onInfoClick,
 }: {
 	component: RSU;
 	onChange: (c: RSU) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	return (
 		<div className="space-y-3">
 			<div className="grid grid-cols-2 gap-3">
-				<Field label="Shares Granted">
+				<Field label="Shares Granted" infoKey="comp.sharesGranted" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="number"
@@ -213,13 +247,13 @@ export function RSUForm({
 						}
 					/>
 				</Field>
-				<Field label="Grant FMV per Share">
+				<Field label="Grant FMV per Share" infoKey="comp.grantFMV" onInfoClick={onInfoClick}>
 					<DollarInput
 						value={component.grantFMV}
 						onChange={(v) => onChange({ ...component, grantFMV: v })}
 					/>
 				</Field>
-				<Field label="Grant Date">
+				<Field label="Grant Date" infoKey="comp.grantDate" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="date"
@@ -229,7 +263,7 @@ export function RSUForm({
 						}
 					/>
 				</Field>
-				<Field label="Vesting Type">
+				<Field label="Vesting Type" infoKey="comp.vestingType" onInfoClick={onInfoClick}>
 					<Select
 						value={component.vestingType}
 						onValueChange={(v) =>
@@ -249,7 +283,7 @@ export function RSUForm({
 					</Select>
 				</Field>
 				{component.vestingType === "double_trigger" && (
-					<Field label="Liquidity Event Year">
+					<Field label="Liquidity Event Year" infoKey="comp.liquidityEventYear" onInfoClick={onInfoClick}>
 						<Input
 							className="h-8 text-sm font-mono"
 							type="number"
@@ -286,9 +320,11 @@ export function RSUForm({
 export function ISOForm({
 	component,
 	onChange,
+	onInfoClick,
 }: {
 	component: ISO;
 	onChange: (c: ISO) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	const { isoShares, nqoShares } = isoShareSplit(
 		component.sharesGranted,
@@ -302,7 +338,7 @@ export function ISOForm({
 	return (
 		<div className="space-y-3">
 			<div className="grid grid-cols-2 gap-3">
-				<Field label="Shares Granted">
+				<Field label="Shares Granted" infoKey="comp.sharesGranted" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="number"
@@ -315,19 +351,19 @@ export function ISOForm({
 						}
 					/>
 				</Field>
-				<Field label="Strike Price per Share">
+				<Field label="Strike Price per Share" infoKey="comp.strikePrice" onInfoClick={onInfoClick}>
 					<DollarInput
 						value={component.strikePrice}
 						onChange={(v) => onChange({ ...component, strikePrice: v })}
 					/>
 				</Field>
-				<Field label="Grant FMV per Share">
+				<Field label="Grant FMV per Share" infoKey="comp.grantFMV" onInfoClick={onInfoClick}>
 					<DollarInput
 						value={component.grantFMV}
 						onChange={(v) => onChange({ ...component, grantFMV: v })}
 					/>
 				</Field>
-				<Field label="Grant Date">
+				<Field label="Grant Date" infoKey="comp.grantDate" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="date"
@@ -337,7 +373,7 @@ export function ISOForm({
 						}
 					/>
 				</Field>
-				<Field label="Expiration Date">
+				<Field label="Expiration Date" infoKey="comp.expirationDate" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="date"
@@ -394,14 +430,16 @@ export function ISOForm({
 export function NQOForm({
 	component,
 	onChange,
+	onInfoClick,
 }: {
 	component: NQO;
 	onChange: (c: NQO) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	return (
 		<div className="space-y-3">
 			<div className="grid grid-cols-2 gap-3">
-				<Field label="Shares Granted">
+				<Field label="Shares Granted" infoKey="comp.sharesGranted" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="number"
@@ -414,19 +452,19 @@ export function NQOForm({
 						}
 					/>
 				</Field>
-				<Field label="Strike Price per Share">
+				<Field label="Strike Price per Share" infoKey="comp.strikePrice" onInfoClick={onInfoClick}>
 					<DollarInput
 						value={component.strikePrice}
 						onChange={(v) => onChange({ ...component, strikePrice: v })}
 					/>
 				</Field>
-				<Field label="Grant FMV per Share">
+				<Field label="Grant FMV per Share" infoKey="comp.grantFMV" onInfoClick={onInfoClick}>
 					<DollarInput
 						value={component.grantFMV}
 						onChange={(v) => onChange({ ...component, grantFMV: v })}
 					/>
 				</Field>
-				<Field label="Grant Date">
+				<Field label="Grant Date" infoKey="comp.grantDate" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="date"
@@ -436,7 +474,7 @@ export function NQOForm({
 						}
 					/>
 				</Field>
-				<Field label="Expiration Date">
+				<Field label="Expiration Date" infoKey="comp.expirationDate" onInfoClick={onInfoClick}>
 					<Input
 						className="h-8 text-sm font-mono"
 						type="date"
@@ -463,22 +501,24 @@ export function NQOForm({
 export function ComponentForm({
 	component,
 	onChange,
+	onInfoClick,
 }: {
 	component: CompComponent;
 	onChange: (c: CompComponent) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	switch (component.type) {
 		case "cash_salary":
-			return <CashSalaryForm component={component} onChange={onChange} />;
+			return <CashSalaryForm component={component} onChange={onChange} onInfoClick={onInfoClick} />;
 		case "cash_bonus":
-			return <CashBonusForm component={component} onChange={onChange} />;
+			return <CashBonusForm component={component} onChange={onChange} onInfoClick={onInfoClick} />;
 		case "rs":
-			return <RestrictedStockForm component={component} onChange={onChange} />;
+			return <RestrictedStockForm component={component} onChange={onChange} onInfoClick={onInfoClick} />;
 		case "rsu":
-			return <RSUForm component={component} onChange={onChange} />;
+			return <RSUForm component={component} onChange={onChange} onInfoClick={onInfoClick} />;
 		case "iso":
-			return <ISOForm component={component} onChange={onChange} />;
+			return <ISOForm component={component} onChange={onChange} onInfoClick={onInfoClick} />;
 		case "nqo":
-			return <NQOForm component={component} onChange={onChange} />;
+			return <NQOForm component={component} onChange={onChange} onInfoClick={onInfoClick} />;
 	}
 }

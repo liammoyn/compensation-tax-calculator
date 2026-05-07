@@ -16,7 +16,7 @@ import { Switch } from "./ui/switch";
 interface Props {
 	taxInputs: TaxInputs;
 	onChange: (taxInputs: TaxInputs) => void;
-	onInfoClick?: (field: keyof TaxInputs) => void;
+	onInfoClick?: (key: string) => void;
 }
 
 function PctField({
@@ -32,7 +32,7 @@ function PctField({
 	taxInputs: TaxInputs;
 	onChange: (t: TaxInputs) => void;
 	tooltip?: string;
-	onInfoClick?: (field: keyof TaxInputs) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	const committedValue = taxInputs[field] as number;
 	const [raw, setRaw] = useState((committedValue * 100).toFixed(2));
@@ -99,7 +99,7 @@ function DollarField({
 	field: keyof TaxInputs;
 	taxInputs: TaxInputs;
 	onChange: (t: TaxInputs) => void;
-	onInfoClick?: (field: keyof TaxInputs) => void;
+	onInfoClick?: (key: string) => void;
 }) {
 	const value = taxInputs[field] as number;
 	const hasInfo = field in TAX_INPUT_INFO;

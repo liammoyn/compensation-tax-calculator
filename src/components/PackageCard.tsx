@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Copy, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Info, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { evaluatePackage } from "../engine";
 import { formatCurrency } from "../lib/format";
@@ -30,10 +30,14 @@ function ScenarioRateFields({
 	label,
 	rates,
 	onChange,
+	infoKey,
+	onInfoClick,
 }: {
 	label: string;
 	rates: { downside: number; base: number; upside: number };
 	onChange: (r: { downside: number; base: number; upside: number }) => void;
+	infoKey?: string;
+	onInfoClick?: (key: string) => void;
 }) {
 	const [raw, setRaw] = useState(toRaw(rates));
 	const [focused, setFocused] = useState<string | null>(null);
@@ -44,9 +48,21 @@ function ScenarioRateFields({
 
 	return (
 		<div className="space-y-1.5">
-			<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-				{label}
-			</Label>
+			<div className="flex items-center gap-1">
+				<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+					{label}
+				</Label>
+				{infoKey && onInfoClick && (
+					<button
+						type="button"
+						onClick={() => onInfoClick(infoKey)}
+						className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+						aria-label={`Info about ${label}`}
+					>
+						<Info className="h-3 w-3" />
+					</button>
+				)}
+			</div>
 			<div className="grid grid-cols-3 gap-1">
 				{(["downside", "base", "upside"] as const).map((s) => (
 					<div key={s} className="relative">
@@ -88,7 +104,7 @@ interface Props {
 	onChange: (pkg: Package) => void;
 	onDelete: () => void;
 	onDuplicate: () => void;
-	onInfoClick?: (field: keyof TaxInputs) => void;
+	onInfoClick?: (key: string) => void;
 }
 
 export function PackageCard({
@@ -161,9 +177,21 @@ export function PackageCard({
 						<div className="mt-3 space-y-4 bg-muted/30 rounded-lg px-3 py-3">
 							<div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
 								<div className="space-y-1.5">
-									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-										Company Valuation
-									</Label>
+									<div className="flex items-center gap-1">
+										<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+											Company Valuation
+										</Label>
+										{onInfoClick && (
+											<button
+												type="button"
+												onClick={() => onInfoClick("pkg.companyValuation")}
+												className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+												aria-label="Info about Company Valuation"
+											>
+												<Info className="h-3 w-3" />
+											</button>
+										)}
+									</div>
 									<div className="relative">
 										<span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">
 											$
@@ -180,9 +208,21 @@ export function PackageCard({
 									</div>
 								</div>
 								<div className="space-y-1.5">
-									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-										Shares Outstanding
-									</Label>
+									<div className="flex items-center gap-1">
+										<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+											Shares Outstanding
+										</Label>
+										{onInfoClick && (
+											<button
+												type="button"
+												onClick={() => onInfoClick("pkg.sharesOutstanding")}
+												className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+												aria-label="Info about Shares Outstanding"
+											>
+												<Info className="h-3 w-3" />
+											</button>
+										)}
+									</div>
 									<Input
 										className="h-8 text-sm font-mono"
 										value={pkg.sharesOutstanding.toLocaleString("en-US")}
@@ -194,9 +234,21 @@ export function PackageCard({
 									/>
 								</div>
 								<div className="space-y-1.5">
-									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-										Base Price / Share
-									</Label>
+									<div className="flex items-center gap-1">
+										<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+											Base Price / Share
+										</Label>
+										{onInfoClick && (
+											<button
+												type="button"
+												onClick={() => onInfoClick("pkg.basePricePerShare")}
+												className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+												aria-label="Info about Base Price / Share"
+											>
+												<Info className="h-3 w-3" />
+											</button>
+										)}
+									</div>
 									<Input
 										className="h-8 text-sm font-mono bg-muted/50 text-muted-foreground"
 										value={formatCurrency(basePrice)}
@@ -204,9 +256,21 @@ export function PackageCard({
 									/>
 								</div>
 								<div className="space-y-1.5">
-									<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-										Horizon (yrs)
-									</Label>
+									<div className="flex items-center gap-1">
+										<Label className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+											Horizon (yrs)
+										</Label>
+										{onInfoClick && (
+											<button
+												type="button"
+												onClick={() => onInfoClick("pkg.horizon")}
+												className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+												aria-label="Info about Horizon"
+											>
+												<Info className="h-3 w-3" />
+											</button>
+										)}
+									</div>
 									<Input
 										className="h-8 text-sm font-mono"
 										type="number"
@@ -231,16 +295,22 @@ export function PackageCard({
 									label="Stock Price Growth (%/yr)"
 									rates={pkg.scenarioGrowthRates}
 									onChange={(r) => onChange({ ...pkg, scenarioGrowthRates: r })}
+									infoKey="pkg.stockPriceGrowth"
+									onInfoClick={onInfoClick}
 								/>
 								<ScenarioRateFields
 									label="Salary Growth (%/yr)"
 									rates={pkg.salaryGrowthRates}
 									onChange={(r) => onChange({ ...pkg, salaryGrowthRates: r })}
+									infoKey="pkg.salaryGrowth"
+									onInfoClick={onInfoClick}
 								/>
 								<ScenarioRateFields
 									label="Bonus Growth (%/yr)"
 									rates={pkg.bonusGrowthRates}
 									onChange={(r) => onChange({ ...pkg, bonusGrowthRates: r })}
+									infoKey="pkg.bonusGrowth"
+									onInfoClick={onInfoClick}
 								/>
 							</div>
 						</div>
@@ -302,7 +372,7 @@ export function PackageCard({
 					<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
 						Compensation Components
 					</p>
-					<ComponentBuilder pkg={pkg} onChange={onChange} />
+					<ComponentBuilder pkg={pkg} onChange={onChange} onInfoClick={onInfoClick} />
 				</div>
 
 				{/* Results */}

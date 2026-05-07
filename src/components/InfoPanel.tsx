@@ -1,15 +1,14 @@
 import { X } from "lucide-react";
-import { TAX_INPUT_INFO } from "../docs/taxAssumptionInfo";
-import type { TaxInputs } from "../types";
+import { INFO_REGISTRY } from "../docs/fieldInfo";
 import { Button } from "./ui/button";
 
 interface Props {
-	field: keyof TaxInputs | null;
+	field: string | null;
 	onClose: () => void;
 }
 
 export function InfoPanel({ field, onClose }: Props) {
-	const info = field ? TAX_INPUT_INFO[field] : null;
+	const info = field ? INFO_REGISTRY[field] : null;
 	const open = field !== null && info !== undefined;
 
 	return (

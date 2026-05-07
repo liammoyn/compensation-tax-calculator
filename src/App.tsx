@@ -31,9 +31,7 @@ export function App() {
 	const [globalTaxInputs, setGlobalTaxInputs] =
 		useState<TaxInputs>(DEFAULT_TAX_INPUTS);
 	const [loading, setLoading] = useState(true);
-	const [infoPanelField, setInfoPanelField] = useState<keyof TaxInputs | null>(
-		null,
-	);
+	const [infoPanelField, setInfoPanelField] = useState<string | null>(null);
 
 	const pkgSaveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
 		new Map(),
