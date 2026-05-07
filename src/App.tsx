@@ -7,6 +7,7 @@ import { PackageCard } from "./components/PackageCard";
 import { Button } from "./components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { VestingTimeline } from "./components/VestingTimeline";
+import { store } from "./store";
 import type { Package, TaxInputs } from "./types";
 import { CURRENT_YEAR, DEFAULT_TAX_INPUTS } from "./types";
 
@@ -24,26 +25,6 @@ function newPackage(): Package {
 	};
 }
 
-async function apiSavePackage(pkg: Package) {
-	await fetch("/api/packages", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(pkg),
-	});
-}
-
-async function apiDeletePackage(id: string) {
-	await fetch(`/api/packages/${id}`, { method: "DELETE" });
-}
-
-async function apiSaveTaxInputs(taxInputs: TaxInputs) {
-	await fetch("/api/tax-inputs", {
-		method: "PUT",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(taxInputs),
-	});
-}
-
 export function App() {
 	const [packages, setPackages] = useState<Package[]>([]);
 	const [globalTaxInputs, setGlobalTaxInputs] =
@@ -56,10 +37,7 @@ export function App() {
 	const taxSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
-		Promise.all([
-			fetch("/api/packages").then((r) => r.json()),
-			fetch("/api/tax-inputs").then((r) => r.json()),
-		])
+		Promise.all([store.getAllPackages(), store.getGlobalTaxInputs()])
 			.then(([pkgs, tax]) => {
 				setPackages(pkgs);
 				setGlobalTaxInputs(tax);
@@ -74,19 +52,19 @@ export function App() {
 		if (existing) clearTimeout(existing);
 		pkgSaveTimers.current.set(
 			pkg.id,
-			setTimeout(() => apiSavePackage(pkg), 500),
+			setTimeout(() => store.upsertPackage(pkg), 500),
 		);
 	}, []);
 
 	const addPackage = () => {
 		const pkg = newPackage();
 		setPackages((prev) => [...prev, pkg]);
-		apiSavePackage(pkg);
+		store.upsertPackage(pkg);
 	};
 
 	const deletePackage = (id: string) => {
 		setPackages((prev) => prev.filter((p) => p.id !== id));
-		apiDeletePackage(id);
+		store.deletePackage(id);
 	};
 
 	const duplicatePackage = (pkg: Package) => {
@@ -96,13 +74,13 @@ export function App() {
 			name: `${pkg.name} (copy)`,
 		};
 		setPackages((prev) => [...prev, copy]);
-		apiSavePackage(copy);
+		store.upsertPackage(copy);
 	};
 
 	const updateTaxInputs = (tax: TaxInputs) => {
 		setGlobalTaxInputs(tax);
 		if (taxSaveTimer.current) clearTimeout(taxSaveTimer.current);
-		taxSaveTimer.current = setTimeout(() => apiSaveTaxInputs(tax), 500);
+		taxSaveTimer.current = setTimeout(() => store.setGlobalTaxInputs(tax), 500);
 	};
 
 	const exportAll = () => {
@@ -128,12 +106,12 @@ export function App() {
 				if (data.packages) {
 					setPackages(data.packages);
 					for (const p of data.packages as Package[]) {
-						apiSavePackage(p);
+						store.upsertPackage(p);
 					}
 				}
 				if (data.globalTaxInputs) {
 					setGlobalTaxInputs(data.globalTaxInputs);
-					apiSaveTaxInputs(data.globalTaxInputs);
+					store.setGlobalTaxInputs(data.globalTaxInputs);
 				}
 			} catch {
 				alert("Invalid JSON file");
