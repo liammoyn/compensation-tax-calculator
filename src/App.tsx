@@ -137,7 +137,7 @@ export function App() {
 						<div className="w-1 h-8 rounded-full bg-primary" />
 						<div>
 							<h1 className="text-sm font-semibold tracking-tight leading-tight">
-								Comp Package Evaluator
+								Compensation Package Evaluator
 							</h1>
 							<p className="text-[11px] text-muted-foreground tracking-wide">
 								After-tax value · employer cost · NPV analysis
