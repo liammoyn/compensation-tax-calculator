@@ -1,15 +1,9 @@
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { COMPONENT_LABELS, formatCurrency } from "../lib/format";
 import type { CompComponent, Package } from "../types";
 import { CURRENT_YEAR } from "../types";
 import { ComponentForm } from "./forms/ComponentForms";
 import { Button } from "./ui/button";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "./ui/collapsible";
 
 const COMPONENT_DEFAULTS: Record<CompComponent["type"], () => CompComponent> = {
 	cash_salary: () => ({ type: "cash_salary", annualAmount: 150_000 }),
@@ -81,97 +75,21 @@ function componentSummary(c: CompComponent): string {
 	}
 }
 
-const BADGE_COLORS: Record<CompComponent["type"], string> = {
-	cash_salary: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-	cash_bonus: "bg-teal-100 text-teal-700 border border-teal-200",
-	rs: "bg-violet-100 text-violet-700 border border-violet-200",
-	rsu: "bg-sky-100 text-sky-700 border border-sky-200",
-	iso: "bg-amber-100 text-amber-700 border border-amber-200",
-	nqo: "bg-rose-100 text-rose-700 border border-rose-200",
-};
-
 interface Props {
 	pkg: Package;
 	onChange: (pkg: Package) => void;
 }
 
-function TypeSwitcher({
-	current,
-	onSelect,
-}: {
-	current: CompComponent["type"];
-	onSelect: (type: CompComponent["type"]) => void;
-}) {
-	const [open, setOpen] = useState(false);
-	const ref = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		if (!open) return;
-		const handler = (e: MouseEvent) => {
-			if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-		};
-		document.addEventListener("mousedown", handler);
-		return () => document.removeEventListener("mousedown", handler);
-	}, [open]);
-
-	return (
-		<div className="relative" ref={ref}>
-			<button
-				type="button"
-				onClick={(e) => {
-					e.stopPropagation();
-					setOpen((v) => !v);
-				}}
-				className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide transition-opacity hover:opacity-80 ${BADGE_COLORS[current]}`}
-				title="Change component type"
-			>
-				{COMPONENT_LABELS[current]}
-			</button>
-			{open && (
-				<div className="absolute top-full left-0 z-20 mt-1 w-44 rounded-lg border bg-popover shadow-lg overflow-hidden">
-					{(Object.keys(COMPONENT_LABELS) as CompComponent["type"][])
-						.filter((t) => t !== current)
-						.map((type) => (
-							<button
-								type="button"
-								key={type}
-								className="flex w-full items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/60 transition-colors"
-								onClick={(e) => {
-									e.stopPropagation();
-									onSelect(type);
-									setOpen(false);
-								}}
-							>
-								<span
-									className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${BADGE_COLORS[type]}`}
-								>
-									{COMPONENT_LABELS[type]}
-								</span>
-							</button>
-						))}
-				</div>
-			)}
-		</div>
-	);
-}
+const ALL_TYPES = Object.keys(COMPONENT_LABELS) as CompComponent["type"][];
 
 export function ComponentBuilder({ pkg, onChange }: Props) {
-	const [openComponents, setOpenComponents] = useState<Set<number>>(new Set());
-
-	const toggleComponent = (i: number) => {
-		setOpenComponents((prev) => {
-			const next = new Set(prev);
-			if (next.has(i)) next.delete(i);
-			else next.add(i);
-			return next;
-		});
-	};
+	const usedTypes = new Set(pkg.components.map((c) => c.type));
+	const availableTypes = ALL_TYPES.filter((t) => !usedTypes.has(t));
+	const allFull = availableTypes.length === 0;
 
 	const addComponent = () => {
-		const newComponent = COMPONENT_DEFAULTS.cash_salary();
-		const newComponents = [...pkg.components, newComponent];
-		onChange({ ...pkg, components: newComponents });
-		setOpenComponents((prev) => new Set([...prev, newComponents.length - 1]));
+		if (allFull) return;
+		onChange({ ...pkg, components: [...pkg.components, COMPONENT_DEFAULTS[availableTypes[0]]()] });
 	};
 
 	const changeComponentType = (i: number, type: CompComponent["type"]) => {
@@ -195,14 +113,6 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 			...pkg,
 			components: pkg.components.filter((_, idx) => idx !== i),
 		});
-		setOpenComponents((prev) => {
-			const next = new Set<number>();
-			prev.forEach((j) => {
-				if (j < i) next.add(j);
-				else if (j > i) next.add(j - 1);
-			});
-			return next;
-		});
 	};
 
 	return (
@@ -214,64 +124,55 @@ export function ComponentBuilder({ pkg, onChange }: Props) {
 			)}
 
 			{pkg.components.map((component, i) => (
-				<Collapsible
+				<div
 					key={
 						"grantDate" in component
 							? `${component.type}-${component.grantDate}`
 							: `${component.type}-${i}`
 					}
-					open={openComponents.has(i)}
-					onOpenChange={() => toggleComponent(i)}
+					className="border rounded-lg overflow-hidden"
 				>
-					<div className="border rounded-lg overflow-hidden">
-						<CollapsibleTrigger asChild>
-							<button
-								type="button"
-								className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-muted/30 transition-colors"
-							>
-								<div className="flex items-center gap-2.5">
-									{openComponents.has(i) ? (
-										<ChevronDown className="h-3 w-3 text-muted-foreground/50" />
-									) : (
-										<ChevronRight className="h-3 w-3 text-muted-foreground/50" />
-									)}
-									<TypeSwitcher
-										current={component.type}
-										onSelect={(type) => changeComponentType(i, type)}
-									/>
-									<span className="text-xs text-muted-foreground font-mono">
-										{componentSummary(component)}
-									</span>
-								</div>
-								<button
-									type="button"
-									onClick={(e) => {
-										e.stopPropagation();
-										removeComponent(i);
-									}}
-									className="text-muted-foreground/30 hover:text-destructive p-1 transition-colors"
-								>
-									<Trash2 className="h-3 w-3" />
-								</button>
-							</button>
-						</CollapsibleTrigger>
-						<CollapsibleContent>
-							<div className="px-4 pb-4 pt-3 border-t bg-muted/20">
-								<ComponentForm
-									component={component}
-									onChange={(c) => updateComponent(i, c)}
-								/>
-							</div>
-						</CollapsibleContent>
+					<div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-muted/10">
+						<select
+							value={component.type}
+							onChange={(e) =>
+								changeComponentType(i, e.target.value as CompComponent["type"])
+							}
+							className="text-xs font-medium rounded border border-border bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring"
+						>
+							<option value={component.type}>{COMPONENT_LABELS[component.type]}</option>
+							{ALL_TYPES.filter((t) => !usedTypes.has(t)).map((type) => (
+								<option key={type} value={type}>
+									{COMPONENT_LABELS[type]}
+								</option>
+							))}
+						</select>
+						<span className="text-xs text-muted-foreground font-mono text-center">
+							{componentSummary(component)}
+						</span>
+						<button
+							type="button"
+							onClick={() => removeComponent(i)}
+							className="text-muted-foreground/30 hover:text-destructive p-1 transition-colors"
+						>
+							<Trash2 className="h-3 w-3" />
+						</button>
 					</div>
-				</Collapsible>
+					<div className="px-4 pb-4 pt-3 border-t bg-muted/20">
+						<ComponentForm
+							component={component}
+							onChange={(c) => updateComponent(i, c)}
+						/>
+					</div>
+				</div>
 			))}
 
 			<div className="pt-1">
 				<Button
 					variant="outline"
 					size="sm"
-					className="w-full h-8 text-xs text-muted-foreground border-dashed hover:border-solid hover:text-foreground transition-all"
+					disabled={allFull}
+					className="w-full h-8 text-xs text-muted-foreground border-dashed hover:border-solid hover:text-foreground transition-all disabled:opacity-40 disabled:cursor-not-allowed"
 					onClick={addComponent}
 				>
 					<Plus className="h-3.5 w-3.5 mr-1.5" /> Add Component
