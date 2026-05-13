@@ -5,6 +5,7 @@ import { formatCurrency } from "../lib/format";
 import type { Package, TaxInputs } from "../types";
 import { ComponentBuilder } from "./ComponentBuilder";
 import { GlobalTaxPanel } from "./GlobalTaxPanel";
+import { PackageCalculations } from "./PackageCalculations";
 import { PackageResultSummary } from "./PackageResultSummary";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -372,8 +373,29 @@ export function PackageCard({
 					<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
 						Compensation Components
 					</p>
-					<ComponentBuilder pkg={pkg} onChange={onChange} onInfoClick={onInfoClick} />
+					<ComponentBuilder
+						pkg={pkg}
+						onChange={onChange}
+						onInfoClick={onInfoClick}
+					/>
 				</div>
+
+				{/* Calculations */}
+				{pkg.components.length > 0 && (
+					<>
+						<Separator className="opacity-50" />
+						<div className="space-y-3 rounded-lg px-3 py-3">
+							<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
+								Calculations
+							</p>
+							<PackageCalculations
+								pkg={pkg}
+								taxInputs={pkg.taxInputs ?? globalTaxInputs}
+								result={result}
+							/>
+						</div>
+					</>
+				)}
 
 				{/* Results */}
 				{pkg.components.length > 0 && (

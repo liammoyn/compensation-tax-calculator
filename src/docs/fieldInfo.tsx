@@ -50,13 +50,13 @@ export const INFO_REGISTRY: Record<string, TaxInputInfo> = {
 					The total number of shares that represent ownership of the company,
 					counted across all shareholders. This tool uses the{" "}
 					<strong>fully diluted</strong> share count — meaning it includes not
-					just currently issued shares, but also shares reserved for the employee
-					option pool, outstanding warrants, and convertible notes.
+					just currently issued shares, but also shares reserved for the
+					employee option pool, outstanding warrants, and convertible notes.
 				</p>
 				<p className="mt-3">
-					Using the fully diluted count gives a more conservative (and realistic)
-					picture of what each share is worth, since future dilution from the
-					option pool is already reflected.
+					Using the fully diluted count gives a more conservative (and
+					realistic) picture of what each share is worth, since future dilution
+					from the option pool is already reflected.
 				</p>
 				<Callout>
 					Your offer letter or a company-provided cap table summary usually
@@ -200,8 +200,9 @@ export const INFO_REGISTRY: Record<string, TaxInputInfo> = {
 			<>
 				<p>
 					Your fixed annual salary before taxes and deductions. This is the
-					amount you are guaranteed each year regardless of company or individual
-					performance — it does not include bonuses, equity, or benefits.
+					amount you are guaranteed each year regardless of company or
+					individual performance — it does not include bonuses, equity, or
+					benefits.
 				</p>
 				<p className="mt-3">
 					All base salary is taxed as <strong>ordinary income</strong> in the
@@ -329,8 +330,8 @@ export const INFO_REGISTRY: Record<string, TaxInputInfo> = {
 					because all appreciation after the election date is taxed at the lower
 					long-term capital gains rate instead of ordinary income rates. The
 					tradeoff: if you leave the company before fully vesting, you've
-					prepaid tax on shares you never received (you can claim a capital loss,
-					but you lose the time value of that prepaid tax).
+					prepaid tax on shares you never received (you can claim a capital
+					loss, but you lose the time value of that prepaid tax).
 				</p>
 				<Callout>
 					<strong>Critical deadline:</strong> the 83(b) election must be filed
@@ -347,9 +348,7 @@ export const INFO_REGISTRY: Record<string, TaxInputInfo> = {
 		title: "Vesting Type",
 		description: (
 			<>
-				<p>
-					How and when your RSUs settle into shares you actually own:
-				</p>
+				<p>How and when your RSUs settle into shares you actually own:</p>
 				<ul className="mt-2 ml-4 list-disc space-y-2">
 					<li>
 						<strong>Time-based:</strong> shares are delivered on a fixed
@@ -382,8 +381,8 @@ export const INFO_REGISTRY: Record<string, TaxInputInfo> = {
 					For double-trigger RSUs, the year in which the company is expected to
 					have a <strong>liquidity event</strong> — an IPO, direct listing, SPAC
 					merger, or acquisition — that satisfies the second vesting condition.
-					Your double-trigger RSUs will only have value if you are still employed
-					when this event occurs.
+					Your double-trigger RSUs will only have value if you are still
+					employed when this event occurs.
 				</p>
 				<p className="mt-3">
 					The tool uses the stock price projected for this year (based on your
@@ -433,9 +432,9 @@ export const INFO_REGISTRY: Record<string, TaxInputInfo> = {
 			<>
 				<p>
 					The last date on which you can exercise your options. After this date,
-					any unexercised options become{" "}
-					<strong>permanently worthless</strong>, regardless of how valuable the
-					underlying stock is. Options are a "use it or lose it" right.
+					any unexercised options become <strong>permanently worthless</strong>,
+					regardless of how valuable the underlying stock is. Options are a "use
+					it or lose it" right.
 				</p>
 				<p className="mt-3">
 					ISO options are legally capped at <strong>10 years</strong> from the

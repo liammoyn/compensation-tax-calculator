@@ -357,9 +357,10 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 		description: (
 			<>
 				<p>
-					When enabled, the <strong>3.8% Net Investment Income Tax (NIIT)</strong>{" "}
-					is added to all capital gains calculations regardless of your income
-					level. When disabled, NIIT is excluded entirely.
+					When enabled, the{" "}
+					<strong>3.8% Net Investment Income Tax (NIIT)</strong> is added to all
+					capital gains calculations regardless of your income level. When
+					disabled, NIIT is excluded entirely.
 				</p>
 				<p className="mt-3">
 					The NIIT technically applies only when your Modified Adjusted Gross
@@ -369,8 +370,8 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 				</p>
 				<Callout>
 					<strong>Enable this toggle</strong> if your total income clearly
-					exceeds the MAGI thresholds. When on, your effective federal LTCG
-					rate becomes 23.8% (20% + 3.8%) rather than 20%.
+					exceeds the MAGI thresholds. When on, your effective federal LTCG rate
+					becomes 23.8% (20% + 3.8%) rather than 20%.
 				</Callout>
 			</>
 		),
@@ -395,9 +396,9 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					before 2018.
 				</p>
 				<Callout>
-					<strong>Enable this toggle for public companies</strong> when
-					modeling executive compensation above $1M. Leave it off for private
-					companies or when total annual compensation is below the cap.
+					<strong>Enable this toggle for public companies</strong> when modeling
+					executive compensation above $1M. Leave it off for private companies
+					or when total annual compensation is below the cap.
 				</Callout>
 			</>
 		),
