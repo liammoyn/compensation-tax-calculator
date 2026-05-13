@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { npv } from "../engine/npv";
+import { computeMarginalNPV } from "../engine/sensitivity";
 import { employeeFicaEffective } from "../engine/tax";
 import { formatCurrency, formatPercent } from "../lib/format";
 import type {
@@ -407,10 +408,24 @@ function FormulaBlock({
 	);
 }
 
+type MarginalMode = "absolute" | "pct";
+
 interface LegendRow {
 	symbol: React.ReactNode;
 	description: string;
 	value: string;
+	marginalNPVAbsolute: string | null;
+	marginalNPVPct: string | null;
+}
+
+function formatMarginal(delta: number): string {
+	const abs = formatCurrency(Math.abs(delta));
+	return delta >= 0 ? `+${abs}` : `−${abs}`;
+}
+
+function formatMarginalPct(pct: number): string {
+	const abs = Math.abs(pct).toFixed(2);
+	return pct >= 0 ? `+${abs}%` : `−${abs}%`;
 }
 
 function buildLegend(
@@ -418,34 +433,86 @@ function buildLegend(
 	taxInputs: TaxInputs,
 	basePrice: number,
 	ficaEff: number,
+	baseEmployeeNPV: number,
 ): LegendRow[] {
+	type NudgeFactory = (delta: number) => (p: Package, t: TaxInputs) => { pkg: Package; taxInputs: TaxInputs };
+
+	// Compute both display modes from a single nudge factory.
+	// absoluteDelta: the fixed-unit nudge (+0.01 for rates, +1 for dollars, +1 for T)
+	// pctDelta: 1% of the current value, or null when a % nudge isn't meaningful (e.g. T)
+	const computeBoth = (
+		absoluteDelta: number,
+		pctDelta: number | null,
+		factory: NudgeFactory,
+	): { marginalNPVAbsolute: string; marginalNPVPct: string | null } => {
+		const absChange = computeMarginalNPV(pkg, taxInputs, factory(absoluteDelta), baseEmployeeNPV);
+		let pct: string | null = null;
+		if (pctDelta !== null && baseEmployeeNPV !== 0) {
+			const pctChange = computeMarginalNPV(pkg, taxInputs, factory(pctDelta), baseEmployeeNPV);
+			pct = formatMarginalPct((pctChange / Math.abs(baseEmployeeNPV)) * 100);
+		}
+		return { marginalNPVAbsolute: formatMarginal(absChange), marginalNPVPct: pct };
+	};
+
+	const none = { marginalNPVAbsolute: null, marginalNPVPct: null } as const;
+
 	const rows: LegendRow[] = [
 		{
 			symbol: <>P{sub("0")}</>,
 			description: "Base price per share",
 			value: formatCurrency(basePrice),
+			...none,
 		},
 		{
 			symbol: <>g{sub("p")}</>,
 			description: "Stock growth rate (base scenario)",
 			value: formatPercent(pkg.scenarioGrowthRates.base),
+			...computeBoth(
+				0.01,
+				pkg.scenarioGrowthRates.base * 0.01,
+				(d) => (p, t) => ({
+					pkg: { ...p, scenarioGrowthRates: { ...p.scenarioGrowthRates, base: p.scenarioGrowthRates.base + d } },
+					taxInputs: t,
+				}),
+			),
 		},
 	];
 
 	if (pkg.components.some((c) => c.type === "cash_salary")) {
-		const c = pkg.components.find(
-			(c) => c.type === "cash_salary",
-		) as CashSalary;
+		const c = pkg.components.find((c) => c.type === "cash_salary") as CashSalary;
 		rows.push(
 			{
 				symbol: <>S{sub("0")}</>,
 				description: "Annual base salary",
 				value: formatCurrency(c.annualAmount),
+				...computeBoth(
+					1,
+					c.annualAmount * 0.01,
+					(d) => (p, t) => ({
+						pkg: {
+							...p,
+							components: p.components.map((comp) =>
+								comp.type === "cash_salary"
+									? { ...comp, annualAmount: (comp as CashSalary).annualAmount + d }
+									: comp,
+							),
+						},
+						taxInputs: t,
+					}),
+				),
 			},
 			{
 				symbol: <>g{sub("s")}</>,
 				description: "Salary growth rate (base scenario)",
 				value: formatPercent(pkg.salaryGrowthRates.base),
+				...computeBoth(
+					0.01,
+					pkg.salaryGrowthRates.base * 0.01,
+					(d) => (p, t) => ({
+						pkg: { ...p, salaryGrowthRates: { ...p.salaryGrowthRates, base: p.salaryGrowthRates.base + d } },
+						taxInputs: t,
+					}),
+				),
 			},
 		);
 	}
@@ -457,29 +524,44 @@ function buildLegend(
 				symbol: <>B{sub("0")}</>,
 				description: "Target annual bonus",
 				value: formatCurrency(c.targetAmount),
+				...computeBoth(
+					1,
+					c.targetAmount * 0.01,
+					(d) => (p, t) => ({
+						pkg: {
+							...p,
+							components: p.components.map((comp) =>
+								comp.type === "cash_bonus"
+									? { ...comp, targetAmount: (comp as CashBonus).targetAmount + d }
+									: comp,
+							),
+						},
+						taxInputs: t,
+					}),
+				),
 			},
 			{
 				symbol: <>g{sub("b")}</>,
 				description: "Bonus growth rate (base scenario)",
 				value: formatPercent(pkg.bonusGrowthRates.base),
+				...computeBoth(
+					0.01,
+					pkg.bonusGrowthRates.base * 0.01,
+					(d) => (p, t) => ({
+						pkg: { ...p, bonusGrowthRates: { ...p.bonusGrowthRates, base: p.bonusGrowthRates.base + d } },
+						taxInputs: t,
+					}),
+				),
 			},
 		);
 	}
 
 	if (pkg.components.some((c) => c.type === "rsu" || c.type === "rs")) {
-		rows.push({
-			symbol: <>N{sub("n")}</>,
-			description: "Shares vesting in year n",
-			value: "from vesting schedule",
-		});
+		rows.push({ symbol: <>N{sub("n")}</>, description: "Shares vesting in year n", value: "from vesting schedule", ...none });
 	}
 
 	if (pkg.components.some((c) => c.type === "iso" || c.type === "nqo")) {
-		rows.push({
-			symbol: <>E{sub("n")}</>,
-			description: "Shares exercised in year n",
-			value: "from exercise schedule",
-		});
+		rows.push({ symbol: <>E{sub("n")}</>, description: "Shares exercised in year n", value: "from exercise schedule", ...none });
 	}
 
 	if (pkg.components.some((c) => c.type === "iso")) {
@@ -488,6 +570,19 @@ function buildLegend(
 			symbol: <>K{sub("ISO")}</>,
 			description: "ISO strike price",
 			value: formatCurrency(c.strikePrice),
+			...computeBoth(
+				1,
+				c.strikePrice * 0.01,
+				(d) => (p, t) => ({
+					pkg: {
+						...p,
+						components: p.components.map((comp) =>
+							comp.type === "iso" ? { ...comp, strikePrice: (comp as ISO).strikePrice + d } : comp,
+						),
+					},
+					taxInputs: t,
+				}),
+			),
 		});
 	}
 
@@ -497,17 +592,34 @@ function buildLegend(
 			symbol: <>K{sub("NQO")}</>,
 			description: "NQO strike price",
 			value: formatCurrency(c.strikePrice),
+			...computeBoth(
+				1,
+				c.strikePrice * 0.01,
+				(d) => (p, t) => ({
+					pkg: {
+						...p,
+						components: p.components.map((comp) =>
+							comp.type === "nqo" ? { ...comp, strikePrice: (comp as NQO).strikePrice + d } : comp,
+						),
+					},
+					taxInputs: t,
+				}),
+			),
 		});
 	}
 
 	if (pkg.components.some((c) => c.type === "rs")) {
 		const c = pkg.components.find((c) => c.type === "rs") as RestrictedStock;
 		if (c.election83b) {
+			const combinedLTCG = taxInputs.federalLTCGRate + taxInputs.stateLTCGRate;
 			rows.push({
 				symbol: <>τ{sub("ltcg")}</>,
 				description: "Effective LTCG rate (federal + state)",
-				value: formatPercent(
-					taxInputs.federalLTCGRate + taxInputs.stateLTCGRate,
+				value: formatPercent(combinedLTCG),
+				...computeBoth(
+					0.01,
+					combinedLTCG * 0.01,
+					(d) => (p, t) => ({ pkg: p, taxInputs: { ...t, federalLTCGRate: t.federalLTCGRate + d } }),
 				),
 			});
 		}
@@ -518,26 +630,44 @@ function buildLegend(
 			symbol: <>τ{sub("f")}</>,
 			description: "Federal ordinary income rate",
 			value: formatPercent(taxInputs.federalOrdinaryRate),
+			...computeBoth(
+				0.01,
+				taxInputs.federalOrdinaryRate * 0.01,
+				(d) => (p, t) => ({ pkg: p, taxInputs: { ...t, federalOrdinaryRate: t.federalOrdinaryRate + d } }),
+			),
 		},
 		{
 			symbol: <>τ{sub("s")}</>,
 			description: "State ordinary income rate",
 			value: formatPercent(taxInputs.stateOrdinaryRate),
+			...computeBoth(
+				0.01,
+				taxInputs.stateOrdinaryRate * 0.01,
+				(d) => (p, t) => ({ pkg: p, taxInputs: { ...t, stateOrdinaryRate: t.stateOrdinaryRate + d } }),
+			),
 		},
 		{
 			symbol: <>τ{sub("fica")}</>,
 			description: "FICA effective rate (blended, employee)",
 			value: formatPercent(ficaEff),
+			...none,
 		},
 		{
 			symbol: <>r</>,
 			description: "Employee discount rate",
 			value: formatPercent(taxInputs.employeeDiscountRate),
+			...computeBoth(
+				0.01,
+				taxInputs.employeeDiscountRate * 0.01,
+				(d) => (p, t) => ({ pkg: p, taxInputs: { ...t, employeeDiscountRate: t.employeeDiscountRate + d } }),
+			),
 		},
 		{
 			symbol: <>T</>,
 			description: "Horizon (years)",
 			value: `${pkg.horizon}`,
+			// pctDelta null: 1% of an integer horizon is fractional and meaningless
+			...computeBoth(1, null, (d) => (p, t) => ({ pkg: { ...p, horizon: p.horizon + d }, taxInputs: t })),
 		},
 	);
 
@@ -552,10 +682,10 @@ interface Props {
 
 export function PackageCalculations({ pkg, taxInputs, result }: Props) {
 	const [mode, setMode] = useState<Mode>("variables");
+	const [marginalMode, setMarginalMode] = useState<MarginalMode>("absolute");
 	const v = mode === "variables";
 
 	const baseResult = result.find((r) => r.scenario === "base");
-	if (!baseResult) return null;
 
 	const basePrice =
 		pkg.sharesOutstanding > 0
@@ -567,7 +697,12 @@ export function PackageCalculations({ pkg, taxInputs, result }: Props) {
 
 	const { employeeDiscountRate: r } = taxInputs;
 
-	const legendRows = buildLegend(pkg, taxInputs, basePrice, ficaEff);
+	const legendRows = useMemo(
+		() => buildLegend(pkg, taxInputs, basePrice, ficaEff, baseResult?.employeeNPV ?? 0),
+		[pkg, taxInputs, basePrice, ficaEff, baseResult?.employeeNPV],
+	);
+
+	if (!baseResult) return null;
 
 	return (
 		<TooltipProvider delayDuration={150}>
@@ -620,6 +755,46 @@ export function PackageCalculations({ pkg, taxInputs, result }: Props) {
 									<th className="text-right px-3 py-1.5 font-mono font-normal text-muted-foreground/50">
 										Value
 									</th>
+									<th className="text-right px-3 py-1.5 font-normal text-muted-foreground/50">
+										<div className="flex items-center justify-end gap-2">
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<span className="cursor-help border-b border-dashed border-muted-foreground/40 whitespace-nowrap">
+														Marginal NPV
+													</span>
+												</TooltipTrigger>
+												<TooltipContent side="top" className="max-w-[240px] text-xs">
+													{marginalMode === "absolute"
+														? "Change in employee NPV (base) from +1pp for rates, +$1 for dollar amounts, or +1yr for horizon."
+														: "% change in employee NPV (base) from a +1% change in the variable's current value."}
+												</TooltipContent>
+											</Tooltip>
+											<div className="flex rounded border border-border/60 text-[10px] overflow-hidden">
+												<button
+													type="button"
+													onClick={() => setMarginalMode("absolute")}
+													className={`px-1.5 py-0.5 transition-colors ${
+														marginalMode === "absolute"
+															? "bg-primary text-primary-foreground font-medium"
+															: "bg-transparent text-muted-foreground hover:text-foreground"
+													}`}
+												>
+													$Δ
+												</button>
+												<button
+													type="button"
+													onClick={() => setMarginalMode("pct")}
+													className={`px-1.5 py-0.5 border-l border-border/60 transition-colors ${
+														marginalMode === "pct"
+															? "bg-primary text-primary-foreground font-medium"
+															: "bg-transparent text-muted-foreground hover:text-foreground"
+													}`}
+												>
+													%Δ
+												</button>
+											</div>
+										</div>
+									</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -637,6 +812,22 @@ export function PackageCalculations({ pkg, taxInputs, result }: Props) {
 										<td className="px-3 py-1 font-mono text-right text-muted-foreground/70">
 											{row.value}
 										</td>
+										{(() => {
+											const val = marginalMode === "absolute"
+												? row.marginalNPVAbsolute
+												: row.marginalNPVPct;
+											return (
+												<td className={`px-3 py-1 font-mono text-right text-xs ${
+													val === null
+														? "text-muted-foreground/30"
+														: val.startsWith("+")
+														? "text-green-600 dark:text-green-400"
+														: "text-red-600 dark:text-red-400"
+												}`}>
+													{val ?? "—"}
+												</td>
+											);
+										})()}
 									</tr>
 								))}
 							</tbody>
