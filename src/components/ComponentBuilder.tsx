@@ -45,7 +45,12 @@ const COMPONENT_DEFAULTS: Record<CompComponent["type"], () => CompComponent> = {
 		grantDate: `${CURRENT_YEAR}-01-01`,
 		grantFMV: 5,
 		expirationDate: `${CURRENT_YEAR + 10}-01-01`,
-		exerciseSchedule: [],
+		exerciseSchedule: [
+			{ year: CURRENT_YEAR + 1, month: 1, sharesFraction: 0.25 },
+			{ year: CURRENT_YEAR + 2, month: 1, sharesFraction: 0.25 },
+			{ year: CURRENT_YEAR + 3, month: 1, sharesFraction: 0.25 },
+			{ year: CURRENT_YEAR + 4, month: 1, sharesFraction: 0.25 },
+		],
 	}),
 	nqo: () => ({
 		type: "nqo",
@@ -54,7 +59,12 @@ const COMPONENT_DEFAULTS: Record<CompComponent["type"], () => CompComponent> = {
 		grantDate: `${CURRENT_YEAR}-01-01`,
 		grantFMV: 5,
 		expirationDate: `${CURRENT_YEAR + 10}-01-01`,
-		exerciseSchedule: [],
+		exerciseSchedule: [
+			{ year: CURRENT_YEAR + 1, month: 1, sharesFraction: 0.25 },
+			{ year: CURRENT_YEAR + 2, month: 1, sharesFraction: 0.25 },
+			{ year: CURRENT_YEAR + 3, month: 1, sharesFraction: 0.25 },
+			{ year: CURRENT_YEAR + 4, month: 1, sharesFraction: 0.25 },
+		],
 	}),
 };
 
