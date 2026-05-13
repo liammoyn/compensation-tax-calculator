@@ -1,5 +1,6 @@
 import { AlertTriangle, Info } from "lucide-react";
 import type React from "react";
+import { useEffect, useState } from "react";
 import { isoShareSplit } from "../../engine/iso";
 import type {
 	CashBonus,
@@ -67,6 +68,13 @@ function DollarInput({
 	value: number;
 	onChange: (v: number) => void;
 }) {
+	const [raw, setRaw] = useState(value.toLocaleString("en-US"));
+	const [focused, setFocused] = useState(false);
+
+	useEffect(() => {
+		if (!focused) setRaw(value.toLocaleString("en-US"));
+	}, [value, focused]);
+
 	return (
 		<div className="relative">
 			<span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 font-mono">
@@ -74,10 +82,13 @@ function DollarInput({
 			</span>
 			<Input
 				className="pl-6 h-8 text-sm font-mono"
-				value={value.toLocaleString("en-US")}
-				onChange={(e) => {
-					const n = parseFloat(e.target.value.replace(/,/g, ""));
-					if (!Number.isNaN(n)) onChange(n);
+				value={raw}
+				onChange={(e) => setRaw(e.target.value)}
+				onFocus={() => setFocused(true)}
+				onBlur={() => {
+					setFocused(false);
+					const n = parseFloat(raw.replace(/,/g, ""));
+					onChange(Number.isNaN(n) ? 0 : n);
 				}}
 			/>
 		</div>

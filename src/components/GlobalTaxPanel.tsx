@@ -101,8 +101,14 @@ function DollarField({
 	onChange: (t: TaxInputs) => void;
 	onInfoClick?: (key: string) => void;
 }) {
-	const value = taxInputs[field] as number;
+	const committedValue = taxInputs[field] as number;
+	const [raw, setRaw] = useState(committedValue.toLocaleString("en-US"));
+	const [focused, setFocused] = useState(false);
 	const hasInfo = field in TAX_INPUT_INFO;
+
+	useEffect(() => {
+		if (!focused) setRaw(committedValue.toLocaleString("en-US"));
+	}, [committedValue, focused]);
 
 	return (
 		<div className="space-y-1.5">
@@ -127,10 +133,13 @@ function DollarField({
 				</span>
 				<Input
 					className="pl-6 h-8 text-sm font-mono"
-					value={value.toLocaleString("en-US")}
-					onChange={(e) => {
-						const n = parseFloat(e.target.value.replace(/,/g, ""));
-						if (!Number.isNaN(n)) onChange({ ...taxInputs, [field]: n });
+					value={raw}
+					onChange={(e) => setRaw(e.target.value)}
+					onFocus={() => setFocused(true)}
+					onBlur={() => {
+						setFocused(false);
+						const n = parseFloat(raw.replace(/,/g, ""));
+						onChange({ ...taxInputs, [field]: Number.isNaN(n) ? 0 : n });
 					}}
 				/>
 			</div>
