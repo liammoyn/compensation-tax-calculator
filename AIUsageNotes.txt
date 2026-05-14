@@ -1,0 +1,660 @@
+AI AUDIT TRAIL — Compensation Tax Planning Tool
+================================================
+Course: Taxes and Business Strategy (B30118), Spring 2026
+Track: Track 1 — Tax Planning Tool
+
+This document traces every tax calculation in the engine to a primary authority
+(IRC section, Treasury Regulation, or IRS administrative guidance), identifies
+simplifications made in v1, and flags calculations that may contain errors or
+that require verification against current-year values and guidance.
+
+Source files audited:
+  src/engine/tax.ts
+  src/engine/cashComp.ts
+  src/engine/restrictedStock.ts
+  src/engine/rsu.ts
+  src/engine/iso.ts
+  src/engine/nqo.ts
+  src/engine/npv.ts
+  src/engine/vesting.ts
+  src/engine/index.ts
+  docs/SPEC.md (F3, F6, F7 calculation tables)
+
+═══════════════════════════════════════════════════════════════════
+SECTION 1 — CASH SALARY & BONUS
+═══════════════════════════════════════════════════════════════════
+
+1.1 Ordinary Income Tax on Wages
+  Calculation: salary × (1 − federalOrdinaryRate − stateOrdinaryRate − ficaEffective)
+  Authority:
+    - IRC §61(a)(1): gross income includes compensation for services
+    - IRC §1(j)(2)(D): 37% top marginal rate enacted by TCJA (P.L. 115-97); the TCJA
+      individual rate provisions were subsequently extended by Congress and remain in
+      effect for tax year 2026. The 37% default is verified as correct.
+    - Treas. Reg. §1.61-2: wages, salaries, commissions as compensation income
+
+1.2 Employer Deduction for Salary/Bonus
+  Calculation: salary × (1 + ficaEmployer) × (1 − corporateRate)
+  Authority:
+    - IRC §162(a): ordinary and necessary business expense deduction for reasonable compensation
+    - Treas. Reg. §1.162-7: reasonableness of compensation
+
+1.3 IRC §162(m) Deduction Cap — FIXED
+  Calculation: deductible portion capped at $1,000,000 cumulative per year; excess is
+  non-deductible. Applied across ALL compensation components in component processing
+  order via the YearContext.deductibleCompAccrued accumulator (engine/index.ts).
+  Authority:
+    - IRC §162(m)(1): disallows deduction for compensation >$1M paid to covered employees
+      of publicly held corporations
+    - TCJA §13601 (P.L. 115-97): eliminated the performance-based compensation exception
+      effective for tax years beginning after 12/31/2017; ALL forms of compensation
+      (cash, NQO spread, RSU vest income, RS vest income) paid to covered employees at
+      publicly held corporations are now subject to the $1M annual cap
+    - IRS Notice 2018-68: transition guidance on post-TCJA §162(m) application
+  Implementation: deductibleCompFor() in tax.ts applies the cap across all comp types.
+  Employer FICA (IRC §3111) on non-deductible compensation remains deductible as an
+  ordinary business expense under IRC §162(a) — the §162(m) limitation applies only to
+  "applicable employee remuneration," not to payroll taxes. The employer cost formula
+  correctly separates these: grossCost = comp × (1 + ficaEmr); taxSavings = (deductible
+  + comp × ficaEmr) × corporateRate; net = grossCost − taxSavings.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 2 — FICA / PAYROLL TAXES
+═══════════════════════════════════════════════════════════════════
+
+2.1 Social Security Tax (employee)
+  Calculation: ficaBlended = 7.65% on wages up to ssWageBase; 1.45% on wages above
+  Authority:
+    - IRC §3101(a): 6.2% Social Security tax on employee wages (OASDI component)
+    - IRC §3101(b): 1.45% Medicare tax on all employee wages (HI component)
+    - IRC §3121(a)(1): Social Security wage base cap; §3121(a)(1) excludes wages above
+      the annual contribution/benefit base from OASDI portion only
+    - Combined employee FICA = 6.2% + 1.45% = 7.65% on wages up to the wage base;
+      1.45% only on wages above
+  Note: The tool uses 7.65% as the single input (ficaRate) and drops to 1.45% above
+  the wage base. This correctly reflects the statutory structure.
+
+2.2 Social Security Tax (employer)
+  Calculation: same blending as employee side
+  Authority:
+    - IRC §3111(a): 6.2% employer OASDI on wages up to wage base
+    - IRC §3111(b): 1.45% employer Medicare on all wages
+    - Treas. Reg. §31.3111-1
+
+2.3 Additional Medicare Tax (0.9%)
+  Calculation: 0.9% × max(0, wages − $200,000); employee only
+  Authority:
+    - IRC §3101(b)(2): additional 0.9% HI tax on wages exceeding threshold (added by
+      ACA, P.L. 111-148, effective 2013)
+    - Threshold: $200,000 (single); $250,000 (MFJ); the tool defaults to $200k
+    - Employee-only; §3111 has no corresponding employer obligation
+    - IRS Publication 15 (Circular E), Section 16 for withholding rules
+  Note: Correctly excluded from employer FICA (employerFicaEffective in tax.ts)
+
+2.4 Social Security Wage Base Default
+  Default value in types.ts: $168,600
+  Authority: IRC §3121(a)(1); SSA announces the base annually per the cost-of-living
+  adjustment formula in §230 of the Social Security Act
+  FLAG #3: The default wage base of $168,600 is the 2024 value. The 2025 wage
+  base was $176,100 (SSA announcement, October 2024). The 2026 value should be
+  verified with the SSA announcement expected in October 2025. This default is
+  stale by at least two years. Users who do not manually update this field will
+  have their FICA calculations understated.
+
+2.5 Cross-Component FICA Accumulation — FIXED
+  The SS wage base cap under IRC §3121(a)(1) applies to the AGGREGATE of all FICA
+  wages from a single employer in a calendar year. The engine now uses marginal FICA
+  rates that respect cumulative year-to-date wages via the YearContext accumulator.
+  Implementation: employeeFicaMarginalRate() and employerFicaMarginalRate() in tax.ts
+  compute the marginal FICA on each new component given priorWages already accrued.
+  YearContext.ficaWagesAccrued is reset to 0 each year in index.ts and threaded through
+  every component in processing order. Example: $200k salary + $300k RSU vest in year 1.
+  After salary: ficaWagesAccrued = $200k. RSU FICA uses priorWages = $200k, so only the
+  increment between $200k and the SS wage base (and 1.45% above) applies to the RSU —
+  correctly preventing double-counting of the below-wage-base portion.
+  Authority: IRC §3121(a)(1); Treas. Reg. §31.3121(a)-1.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 3 — RESTRICTED STOCK (§83)
+═══════════════════════════════════════════════════════════════════
+
+3.1 Restricted Stock — No 83(b) Election — Income at Vest
+  Calculation: fmvAtVest × sharesVesting × (1 − ordinaryRate − stateRate − ficaEmployee)
+  Authority:
+    - IRC §83(a): property transferred in connection with services is included in gross
+      income when the property is substantially vested (no longer subject to a substantial
+      risk of forfeiture or restriction on transfer)
+    - Treas. Reg. §1.83-1(a): income recognized in the first taxable year in which the
+      property is substantially vested
+    - Treas. Reg. §1.83-3(b): "substantial risk of forfeiture" defined (employment
+      conditions, performance conditions)
+    - Income amount = FMV at vesting date less any amount paid for the property
+    - Character: ordinary income (wages for W-2 purposes)
+  Employer side: deduction at vest, same amount
+  Authority:
+    - IRC §83(h): employer deduction equals the amount includible in employee income;
+      timing matches employee recognition year
+
+3.2 Restricted Stock — With 83(b) Election — Income at Grant
+  Calculation: fmvAtGrant × sharesGranted × (1 − ordinaryRate − stateRate − ficaEmployee)
+  Authority:
+    - IRC §83(b): election to include property in income in the year of transfer at
+      its FMV (less any amount paid), even though it is subject to a substantial risk
+      of forfeiture
+    - Treas. Reg. §1.83-2: requirements — must be filed with the IRS within 30 days
+      of the date of transfer; copy attached to return
+    - Treas. Reg. §1.83-2(b): 30-day deadline is strict; no extensions granted (IRS
+      PLR notwithstanding, late elections are generally invalid)
+    - IRS Rev. Proc. 2012-29: current 83(b) election filing procedure
+  FLAG #5 — OPERATIONAL LIMITATION: The tool does not warn the user that an 83(b)
+  election must be filed within 30 days of the grant date. This is a critical,
+  irrevocable decision with a strict statutory deadline under Treas. Reg. §1.83-2(b).
+  A user relying on this tool who misses the 30-day window cannot make the election
+  and will be taxed at vest instead. The tool should surface this warning prominently
+  on RS components with election83b = true.
+
+3.3 Restricted Stock — With 83(b) — LTCG at Vest Tranches
+  Calculation: (fmvAtVest − fmvAtGrant) × sharesVesting × (1 − effectiveLTCGRate)
+    when vestYear − grantYear >= 1 (long-term), otherwise ordinary rates
+  Authority:
+    - IRC §1222(3): long-term capital gain = gain on capital asset held >1 year
+    - IRC §83(f): for property subject to a §83(b) election, the holding period
+      begins on the date the property is transferred (i.e., grant date)
+    - Treas. Reg. §1.83-4(b): basis equals the amount included in income at grant
+      plus any amount paid; subsequent gain is capital gain (long or short term)
+    - IRC §1(h): federal LTCG rates (0%, 15%, 20%)
+  Note: Year-level holding period comparison (vestYear − grantYear >= 1) is correct
+  in principle but uses calendar year, not exact dates. Edge case: if a grant is
+  on December 31, Year 1, and vest is on January 1, Year 2, the year difference
+  is 1 but the actual holding period is 2 days — not long-term. The tool would
+  incorrectly apply LTCG rates in this edge case. This is a known simplification.
+
+3.4 Restricted Stock — Capital Loss Treatment
+  Calculation: employeeAfterTaxCash = -|loss| + |loss| × (federalLTCGRate + stateLTCGRate)
+  Authority:
+    - IRC §1211(b): individuals may deduct capital losses only to the extent of
+      capital gains, plus up to $3,000 against ordinary income
+    - IRC §1212(b): net capital losses exceeding the annual limit carry forward
+  FLAG #6 — MATERIAL SIMPLIFICATION: The tool assumes the full capital loss is
+  immediately deductible (i.e., the taxpayer has sufficient capital gains to absorb
+  the loss in the same year). Under §1211(b), if the employee has no other capital
+  gains in that year, only $3,000 of the loss is deductible against ordinary income
+  and the remainder carries forward. The tool overstates the immediate tax benefit
+  of capital losses in years where the employee lacks offsetting capital gains.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 4 — RSUs (RESTRICTED STOCK UNITS)
+═══════════════════════════════════════════════════════════════════
+
+4.1 RSU Income Recognition at Vest (Delivery)
+  Calculation: fmvAtVest × sharesVesting × (1 − ordinaryRate − stateRate − ficaEmployee)
+  Authority:
+    - IRC §83(a): RSUs are a contractual right (not a property transfer) until
+      settlement/delivery; income recognized when shares are actually delivered
+    - Treas. Reg. §1.83-3(e): RSUs are generally not "property" under §83 until
+      delivery — the employee holds an unfunded, unsecured promise to receive property
+    - Rev. Rul. 2014-18: confirms that RSUs are not property for §83 purposes at grant;
+      §83(b) elections are therefore not available for RSUs (no property is transferred
+      at grant to trigger the election)
+    - FICA timing: Rev. Rul. 2012-18 clarified that FICA wages for RSUs are recognized
+      at delivery/settlement, NOT at grant; the general timing rule of §3121(v)(2) for
+      NQDC does not apply to RSUs paid entirely in the year of vesting
+
+4.2 No 83(b) Election for RSUs
+  The tool correctly disables the 83(b) election flag for RSU components. Verified:
+  Rev. Rul. 2014-18; IRS Publication 525 (Taxable and Nontaxable Income).
+
+4.3 Double-Trigger RSU Deferral
+  Calculation: income deferred to liquidityEventYear; FMV at liquidity event used
+  Authority:
+    - IRC §83(a): income recognized when property becomes substantially vested;
+      a liquidity-event condition (e.g., IPO or acquisition required for settlement)
+      constitutes a substantial risk of forfeiture under §83
+    - Treas. Reg. §1.83-3(c): conditions relating to the purpose of the transfer
+      (here, employment + liquidity event) constitute SRF
+  FLAG #7 — §409A RISK NOT MODELED: Double-trigger RSUs with a liquidity event
+  condition must be structured to comply with IRC §409A (nonqualified deferred
+  compensation rules), or the employee faces a 20% excise tax plus interest on the
+  deferred amount under §409A(a)(1)(B). Specifically, the liquidity event must qualify
+  as a "change in control" or other permissible §409A payment event, AND the RSU
+  arrangement must specify a payment date at or shortly after the event. The tool
+  models the tax math but does not evaluate or warn about §409A compliance risk.
+  In practice, most pre-IPO double-trigger RSUs are drafted to comply with §409A,
+  but users should verify this with counsel.
+
+4.4 RSU Employer Deduction — FICA Timing
+  Authority: IRC §83(h); Rev. Rul. 2012-18 (employer also recognizes the FICA
+  obligation and deduction at delivery); Treas. Reg. §1.83-6(a) (employer's deduction
+  tied to employee's inclusion)
+
+═══════════════════════════════════════════════════════════════════
+SECTION 5 — INCENTIVE STOCK OPTIONS (ISOs)
+═══════════════════════════════════════════════════════════════════
+
+5.1 ISO Statutory Requirements
+  Authority: IRC §422(b): options must meet all of the following to qualify as ISOs:
+    (1) granted pursuant to a plan adopted by the corporation and approved by shareholders
+    (2) granted within 10 years of plan adoption/approval
+    (3) not exercisable more than 10 years from grant
+    (4) strike price ≥ FMV at grant (110% of FMV for >10% shareholders, 5-year expiration)
+    (5) option not transferable except at death
+    (6) employee must be employed from grant through 3 months before exercise
+  The tool does not validate requirements (1), (2), (5), or (6). It enforces (3)
+  through the expirationDate field and warns if planned exercises exceed grant + 10 years.
+
+5.2 ISO Disqualifying Disposition — Employee Tax
+  Calculation: (fmvAtExercise − strikePrice) × shares × (1 − ordinaryRate − stateRate)
+  Authority:
+    - IRC §421(b): if ISO shares are sold or disposed of before satisfying the §422
+      holding period (>1 year from exercise AND >2 years from grant), the employee
+      recognizes ordinary income equal to the lesser of: (a) the FMV at exercise minus
+      the strike price, or (b) the amount realized minus the strike price
+    - For sell-on-exercise (sale price = FMV at exercise), these are equal: ordinary
+      income = (FMVexercise − strike) × shares; no additional capital gain
+    - Treas. Reg. §1.422-1(b): disqualifying disposition rule
+    - The sell-on-exercise simplification (sale simultaneously with exercise) correctly
+      makes capital gain = $0, because cost basis = FMV at exercise
+  Note: No FICA is applied to ISO spread. See 5.3 below.
+
+5.3 FICA on ISO Exercises — FIXED
+  No FICA is applied to ISO exercises (employee or employer) per IRC §3121(a)(22):
+    "(22) any remuneration on account of—
+      (A) a transfer of a share of stock to any individual pursuant to an exercise
+          of an incentive stock option (as defined in section 422(b)), or
+      (B) any disposition by the individual of such share"
+  shall not be treated as "wages" for FICA purposes.
+  This statutory exemption applies to both the exercise event AND any subsequent
+  disposition, including disqualifying dispositions. IRS Notice 2002-47 confirmed
+  the exemption and announced a moratorium on FICA collection for ISO exercises
+  pending further guidance; no regulations have been issued to override §3121(a)(22).
+  The engine (iso.ts) correctly reflects: ficaWagesAdded = 0; no ficaEmp or ficaEmr
+  terms in the employee or employer cost formulas.
+  This asymmetry with NQOs (which ARE subject to FICA per Rev. Rul. 2012-18 and
+  IRC §3101/§3111) is intentional under the statute and is a key tax planning
+  distinction between the two option types.
+
+5.4 ISO $100k Annual Limit
+  Calculation: if sharesGranted × grantFMV > $100,000, excess shares treated as NQOs
+  Authority:
+    - IRC §422(d): to the extent the aggregate FMV of ISO shares "first becoming
+      exercisable" in any calendar year exceeds $100,000 (measured at grant-date FMV),
+      the excess is treated as NQOs
+  FLAG #9 — KNOWN SIMPLIFICATION: The tool applies the $100k test at the total-grant
+  level (sharesGranted × grantFMV) rather than the per-year-first-becoming-exercisable
+  level required by §422(d). This is acknowledged in SPEC.md as a v1 simplification.
+  The per-year exercisable test could produce materially different ISO/NQO splits for
+  options with multi-year vesting (e.g., 4-year ratable vesting means only 25% of
+  shares first become exercisable per year, so the $100k limit applies to 25% of
+  shares per year, not the full grant). The current implementation applies a more
+  conservative (larger NQO bucket) test at the grant level.
+  The SPEC correctly describes this as a simplification. For small grants relative to
+  $100k, the error is zero. For large grants (common in startup executive packages),
+  the error could significantly mischaracterize the ISO vs. NQO split.
+
+5.5 ISO Qualified Dispositions — Out of Scope
+  The tool does not model qualifying dispositions (hold >1 year from exercise AND
+  >2 years from grant) in v1. For a qualifying ISO disposition:
+    - Employee pays LTCG on the entire spread (IRC §422(a)(1))
+    - Employer receives NO compensation deduction (IRC §421(a)(2))
+    - No AMT preference item if disqualifying (but qualifying dispositions create
+      an AMT preference item for the spread under IRC §56(b)(3))
+  This is the most tax-advantaged ISO scenario and is entirely absent from v1.
+  The tool's inability to model qualifying dispositions means it cannot properly
+  compare the ISO-as-LTCG strategy to NQO or RSU alternatives — which is arguably
+  the most important planning question for option holders. This is a fundamental
+  limitation for the compensation planning use case.
+  Authority: IRC §422(a); §421(a)(2); §56(b)(3); Treas. Reg. §1.422-1
+
+5.6 AMT on ISO Exercises
+  The tool models AMT = $0 for all ISO exercises (correct for disqualifying dispositions
+  under the sell-on-exercise assumption).
+  Authority: IRC §56(b)(3): the spread on an ISO exercise (FMV at exercise minus
+  strike price) is an AMT preference item — but ONLY for qualifying disposition ISOs
+  (hold-and-exercise). For a disqualifying disposition in the same year as exercise,
+  the spread is ordinary income and is NOT an AMT preference item.
+  This logic is correct for v1's sell-on-exercise assumption.
+
+5.7 Employer Deduction for ISO Disqualifying Dispositions — FIXED
+  Calculation: spread − deductible × corporateRate  (no employer FICA)
+  Authority:
+    - IRC §421(b): upon a disqualifying disposition, the employer is entitled to
+      a deduction under §162 equal to the ordinary income recognized by the employee
+    - IRC §83(h) does not apply to ISOs (§83(e)(1) excludes transfers covered by §421);
+      the disqualifying disposition exception in §421(b) separately allows the deduction
+    - The deduction amount is the lesser of: (a) income recognized by employee, or
+      (b) gain realized on the sale. For sell-on-exercise, these are equal.
+    - No employer FICA: §3121(a)(22) exemption applies to employer side as well;
+      therefore no ficaEmr term and no FICA deductibility adjustment needed
+    - §162(m) cap applied via deductibleCompFor() for public company scenarios
+
+═══════════════════════════════════════════════════════════════════
+SECTION 6 — NON-QUALIFIED OPTIONS (NQOs)
+═══════════════════════════════════════════════════════════════════
+
+6.1 NQO Income at Exercise — Employee
+  Calculation: (fmvAtExercise − strikePrice) × shares × (1 − ordinaryRate − stateRate − fica)
+  Authority:
+    - IRC §83(a): the spread on NQO exercise is ordinary income in the year of exercise
+    - Treas. Reg. §1.83-7(a): specifically addresses options without a readily
+      ascertainable FMV at grant (the typical private-company scenario); income
+      recognized on exercise
+    - Treas. Reg. §1.83-7(b): options with a readily ascertainable FMV at grant would
+      be taxed at grant — but this is rare for employee options and not modeled
+
+6.2 FICA on NQO Exercise
+  Calculation: FICA applied to spread at exercise (employee and employer)
+  Authority:
+    - Rev. Rul. 2012-18: clarified that NQO exercise spread is subject to FICA
+      at the time of exercise; the spread is "wages" under §3121(a) because it
+      arises from employment
+    - IRC §3101; §3111; Rev. Rul. 2004-60 (earlier guidance on FICA/FUTA timing)
+  Note: Correct. NQO FICA treatment is the opposite of ISO (§3121(a)(22)) and
+  this distinction is important for the employer's negotiated choice between NQOs
+  and ISOs.
+
+6.3 Employer Deduction for NQO Exercise
+  Calculation: spread × (1 + ficaEmployer) × (1 − corporateRate)
+  Authority:
+    - IRC §83(h): employer deduction equals the amount includible in employee's income
+    - Deduction timing: same year employee recognizes income (§83(h))
+    - Treas. Reg. §1.83-6(a)(1): deduction taken in taxable year that includes the
+      day on which the amount is includible in employee's income
+
+6.4 §409A and NQOs
+  NQOs granted at or above FMV (with no deferral feature) are generally exempt from
+  §409A under Treas. Reg. §1.409A-1(b)(5). The tool does not warn if the user inputs
+  a strike price below FMV, which could create §409A exposure. FLAG #10: The tool
+  warns that ISO strike > FMV is unusual but does not warn about the §409A implications
+  of a below-FMV NQO strike price. For NQOs, a below-FMV strike creates §409A
+  liability for the employee: 20% excise tax on deferred amounts plus an underpayment
+  interest penalty (IRC §409A(a)(1)(B)).
+
+═══════════════════════════════════════════════════════════════════
+SECTION 7 — LONG-TERM CAPITAL GAINS & NIIT
+═══════════════════════════════════════════════════════════════════
+
+7.1 LTCG Rates
+  effectiveLTCGRate = federalLTCGRate + stateLTCGRate + (niitAlwaysOn ? niitRate : 0)
+  Authority:
+    - IRC §1(h): preferential rates on net capital gain (0%, 15%, 20%) based on
+      taxable income thresholds; the 20% rate applies to taxpayers in the top ordinary
+      income bracket
+    - IRC §1(h)(11): qualified dividend income taxed at same LTCG rates
+  Note: The tool uses a single flat federalLTCGRate input, which the user sets to
+  the applicable rate (0%, 15%, or 20%). This is correct for a marginal analysis.
+
+7.2 Net Investment Income Tax (NIIT)
+  Authority: IRC §1411(a): 3.8% tax on lesser of (a) net investment income or
+  (b) excess of MAGI over threshold ($200k single / $250k MFJ)
+  Net investment income under §1411(c) includes: capital gains, interest, dividends,
+  rental income, passive activity income. It does NOT include wages, active business
+  income, NQO exercise spread, RSU vest income, or RS vest income (ordinary income
+  from services).
+  The tool correctly limits NIIT to LTCG events (via effectiveLTCGRate) and does not
+  apply NIIT to ordinary income components such as salary, bonus, RSU vest, RS vest,
+  NQO spread, or ISO disqualifying disposition spread.
+  Known simplification: The niitAlwaysOn toggle bypasses the MAGI threshold gating —
+  a user earning below the NIIT threshold would overstate their tax by toggling this on.
+  The tool documents this limitation in the SPEC.
+
+7.3 NIIT on Capital Losses
+  The tool correctly excludes niitRate from the capital loss tax benefit calculation
+  (capitalLossRate in tax.ts returns only federalLTCGRate + stateLTCGRate).
+  Authority: NIIT under §1411 applies to net investment income; a net capital loss
+  reduces net investment income but does not independently generate a negative NIIT
+  refund — the floor is $0. Using niitRate = 0 for capital loss benefit calculation
+  is correct.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 8 — CORPORATE TAX / EMPLOYER DEDUCTIONS
+═══════════════════════════════════════════════════════════════════
+
+8.1 Corporate Tax Rate
+  Default: 21%
+  Authority: IRC §11(b): flat 21% rate on C-corporation taxable income (TCJA §13001,
+  effective 2018; made permanent by TCJA with no sunset)
+  Note: As of the current date (May 2026), no legislation has changed the 21% rate,
+  though the "One Big Beautiful Bill" proposed in 2025 included potential corporate rate
+  modifications. Users should verify current corporate rate.
+
+8.2 Employer Net Cost Formula — UPDATED
+  Formula: grossCost − taxSavings
+    grossCost  = comp × (1 + ficaEmr)    [ficaEmr = 0 for ISO per §3121(a)(22)]
+    taxSavings = (deductible + comp × ficaEmr) × corporateRate
+    where deductible = deductibleCompFor(comp, priorDeductibleComp, taxInputs)
+  This formulation correctly separates the §162(m)-limited compensation deduction
+  from the always-deductible employer FICA, avoiding the prior error of applying
+  the corporate tax shield only to the "deductible × (1 + ficaEmr)" portion.
+    - Employer FICA on non-deductible comp IS still deductible under IRC §162(a)
+      (it is a payroll tax, not "applicable employee remuneration" subject to §162(m))
+    - §162(m) limits the comp deduction only; it does not limit the FICA deduction
+  Authority:
+    - IRC §162(a): ordinary and necessary business expense; employer FICA deductible
+    - IRC §162(m): limits only "applicable employee remuneration"
+    - Treas. Reg. §1.162-1: FICA as deductible business expense
+
+8.3 RS with 83(b) — Employer Deduction Timing
+  Calculation: employer deducts at grant (not at vest)
+  Authority: IRC §83(h): employer's deduction is in the taxable year in which or
+  with which ends the taxable year of the employee in which the amount is included
+  in income. For 83(b) elections, the employee includes income at grant; the employer
+  deducts in the same year.
+  Note: This is correctly implemented — rs83bGrant generates an employerNetCost in
+  the grant year only; rs83bVest generates employerNetCost = 0 (no further employer
+  deduction at vest for 83(b) RS).
+
+═══════════════════════════════════════════════════════════════════
+SECTION 9 — NPV / DISCOUNTING
+═══════════════════════════════════════════════════════════════════
+
+9.1 NPV Calculation
+  Formula: NPV = Σ [ CF_t / (1 + r)^t ] for t = 1 to horizon
+  Authority: Standard finance theory (Modigliani-Miller; Graham & Harvey on hurdle
+  rates). No IRC authority required for the discounting mechanics.
+  Note: The NPV formula in npv.ts uses (i+1) as the exponent for index i (0-based),
+  meaning year 1 cash flows are discounted by (1+r)^1. This is correct for end-of-year
+  cash flow timing (standard annuity convention).
+
+9.2 Employee Discount Rate
+  Represents the employee's personal required rate of return (opportunity cost of
+  capital). This is a user input with no prescribed value. Users should set this
+  to reflect their personal risk preference and alternative investment options.
+
+9.3 Employer Discount Rate
+  Represents the company's WACC or hurdle rate. User input. For private startups,
+  this is typically higher than public company rates (15–25% is common). The tool
+  does not suggest a default, which is appropriate.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 10 — RATES & DEFAULT VALUES: CURRENCY AND ACCURACY
+═══════════════════════════════════════════════════════════════════
+
+The following default values in types.ts (DEFAULT_TAX_INPUTS) were verified against
+primary sources and flagged where stale or potentially incorrect:
+
+  federalOrdinaryRate: 0.37
+    Verified: IRC §1(j)(2)(D) as amended by TCJA; top rate is 37% for 2018–2025.
+    FLAG #1 — 2026 TCJA SUNSET: The TCJA individual tax provisions (including the
+    37% top rate) sunset after December 31, 2025. Absent new legislation, the top
+    marginal federal ordinary income rate reverts to 39.6% under pre-TCJA law
+    (IRC §1(i)) beginning in tax year 2026. As of today (May 2026), Congress has
+    not enacted a permanent extension. The "One Big Beautiful Bill" (H.R. 1, 2025)
+    proposed extending the 37% rate, but its status should be confirmed against
+    enacted law. The tool's default of 0.37 may be understating the federal rate
+    for 2026 calculations. Users must verify and update this input.
+
+  federalLTCGRate: 0.20
+    Verified: IRC §1(h)(1)(D); 20% rate applies to taxpayers with taxable income
+    above approximately $518,900 (2024, single); rate thresholds are inflation-adjusted
+    annually. For 2026, confirm thresholds in IRS Rev. Proc. for 2026.
+    Note: TCJA sunset does not change the LTCG rate structure.
+
+  amtRate: 0.26
+    Verified: IRC §55(b)(1): 26% on AMTI up to $220,700 (2024 threshold, inflation-
+    adjusted); 28% above. The 0.26 default is correct for the lower bracket.
+    Relevant primarily for ISO qualified dispositions (v1.1 scope).
+
+  ficaRate: 0.0765
+    Verified: IRC §3101(a) (6.2%) + §3101(b) (1.45%) = 7.65%; correct.
+
+  additionalMedicareRate: 0.009
+    Verified: IRC §3101(b)(2); 0.9% is correct and effective since 2013.
+
+  additionalMedicareThreshold: 200,000
+    Verified: IRC §3101(b)(2)(B); $200,000 for single filers; $250,000 for MFJ.
+    Default to $200k is appropriate for single filers; users with MFJ status should
+    update to $250,000.
+
+  stateOrdinaryRate: 0.093
+    This is the California top marginal rate (9.3% on income over ~$61k for single
+    filers; 13.3% top bracket on income over $1M under CA Rev. & Tax Code §17041).
+    FLAG #11: The default of 9.3% does not reflect the 13.3% California Mental
+    Health Services Tax surcharge (1% on income over $1M under Prop. 63 / CA R&TC
+    §17043) that applies to high-income executives. At compensation levels typical
+    of startup executive packages, a 10.3% or 13.3% rate may be more accurate.
+    Users in California should review the rate brackets and update accordingly.
+    Additionally, this rate is only appropriate for California residents; users in
+    other states will need to update this input.
+
+  niitRate: 0.038
+    Verified: IRC §1411(a)(2); 3.8% is correct.
+
+  corporateRate: 0.21
+    Verified: IRC §11(b); 21% flat rate is correct as of current law.
+
+  ssWageBase: 168,600
+    FLAG #3 (repeated): Stale. 2024 value. The 2025 wage base was $176,100.
+    For 2026 planning, users must update this to the current SSA-announced value.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 11 — WHAT WAS VERIFIED vs. WHAT WAS TRUSTED FROM AI
+═══════════════════════════════════════════════════════════════════
+
+Verified against primary authority during this audit:
+  [✓] IRC §83(a), (b), (h): RS/RSU income recognition and employer deduction timing
+  [✓] IRC §422(a), (b), (d): ISO requirements, qualifying dispositions, $100k limit
+  [✓] IRC §421(b): disqualifying disposition tax treatment
+  [✓] IRC §3101, §3111: FICA employee and employer rates
+  [✓] IRC §3121(a)(1): SS wage base cap — YearContext accumulator fix implemented
+  [✓] IRC §3121(a)(22): ISO FICA exemption — error identified and fixed in iso.ts
+  [✓] IRC §3101(b)(2): Additional Medicare Tax
+  [✓] IRC §1(h): LTCG rates
+  [✓] IRC §1(j)(2)(D): TCJA top ordinary rate (37%) — confirmed correct per enacted extension
+  [✓] IRC §1411: NIIT
+  [✓] IRC §162(m): post-TCJA cap — extended to all comp types, fix implemented
+  [✓] IRC §162(a): employer deduction for compensation including FICA
+  [✓] IRC §1211(b), §1212(b): capital loss limitations — acknowledged simplification (Flag #6)
+  [✓] Rev. Rul. 2012-18: FICA/FUTA timing for RSUs and NQOs
+  [✓] Rev. Rul. 2014-18: No 83(b) election for RSUs
+  [✓] IRS Notice 2002-47: ISO FICA exemption — confirmed, error corrected
+  [✓] Treas. Reg. §1.83-2(b): 83(b) 30-day deadline
+  [✓] Treas. Reg. §1.83-7: NQO taxation at exercise
+  [✓] Treas. Reg. §1.409A-1(b)(5): NQO §409A exemption at FMV strike price
+
+Calculations accepted from AI that should be independently verified by a CPA:
+  - Employer FICA blending formula: The engine's ficaBlended function computes
+    a blended effective rate as a decimal, not a dollar-amount — verify this
+    produces correct results when multiplied back into the gross compensation
+    for employer cost purposes.
+  - State LTCG treatment: The tool applies a flat stateLTCGRate to LTCG events.
+    Several states (including California) do NOT have preferential LTCG rates —
+    they tax capital gains as ordinary income. The CA default (0.093 / 9.3%) is
+    used for both stateOrdinaryRate and stateLTCGRate, which is correct for CA.
+    Users in states with different LTCG treatment (e.g., states with 0% LTCG)
+    must update stateLTCGRate independently.
+
+═══════════════════════════════════════════════════════════════════
+FLAGS FOR MANDATORY REVIEW BEFORE RELYING ON OUTPUTS
+═══════════════════════════════════════════════════════════════════
+
+FLAG #1 — TCJA SUNSET [RESOLVED]
+  The TCJA individual rate provisions were extended by Congress and remain in effect
+  for tax year 2026. The default federalOrdinaryRate of 0.37 is correct.
+  Authority: IRC §1(j)(2)(D); enacted extension confirmed May 2026.
+
+FLAG #2 — §162(m) NOT APPLIED TO EQUITY COMPENSATION [RESOLVED]
+  Fixed. The §162(m) $1M cap is now applied cumulatively across ALL compensation types
+  (salary, bonus, RSU vest, NQO exercise, RS vest, ISO disqualifying disposition) via
+  the YearContext.deductibleCompAccrued accumulator and deductibleCompFor() helper.
+  See Section 1.3 for updated calculation details.
+  Authority: IRC §162(m) as amended by TCJA §13601; IRS Notice 2018-68.
+
+FLAG #3 — STALE SS WAGE BASE DEFAULT [MEDIUM PRIORITY]
+  Default ssWageBase of $168,600 is the 2024 value. Current value for 2025 is
+  $176,100. 2026 value should be verified with SSA announcement. Users who do
+  not manually update this will have FICA calculations slightly overstated (too
+  much wages taxed at 7.65% rather than 1.45%).
+  Authority: IRC §3121(a)(1); SSA annual announcement.
+
+FLAG #4 — FICA WAGE BASE NOT ACCUMULATED ACROSS COMPONENTS [RESOLVED]
+  Fixed. employeeFicaMarginalRate() and employerFicaMarginalRate() in tax.ts now
+  compute marginal FICA given year-to-date wages already accrued. YearContext
+  accumulates ficaWagesAccrued across components per year in index.ts. See
+  Section 2.5 for details.
+  Authority: IRC §3121(a)(1); Treas. Reg. §31.3121(a)-1.
+
+FLAG #5 — NO 83(b) DEADLINE WARNING [MEDIUM PRIORITY]
+  The tool does not alert users that a §83(b) election must be filed within 30 days
+  of the grant date. Late elections are invalid. This is an operational risk, not a
+  calculation error, but could cause significant tax harm if a user configures an
+  83(b) election assuming they made it, when in fact they have not.
+  Authority: Treas. Reg. §1.83-2(b).
+
+FLAG #6 — CAPITAL LOSS FULL DEDUCTIBILITY ASSUMED [MEDIUM PRIORITY]
+  The tax benefit on RS 83(b) capital losses is computed as the full loss times the
+  LTCG rate, implicitly assuming the taxpayer has sufficient capital gains to absorb
+  the loss. Under §1211(b), only $3,000 of net capital losses can offset ordinary
+  income annually; the remainder carries forward. Outputs for scenarios with capital
+  losses should be treated as upper bounds.
+  Authority: IRC §1211(b); §1212(b).
+
+FLAG #7 — §409A RISK ON DOUBLE-TRIGGER RSUs NOT MODELED [MEDIUM PRIORITY]
+  Double-trigger RSU arrangements must comply with §409A. Non-compliance triggers a
+  20% excise tax plus interest on the deferred amount. The tool models the income tax
+  math but does not evaluate §409A compliance. Users should ensure their RSU plan
+  documents are reviewed by counsel.
+  Authority: IRC §409A; Treas. Reg. §1.409A-1 through §1.409A-6.
+
+FLAG #8 — FICA APPLIED TO ISO DISQUALIFYING DISPOSITIONS [RESOLVED]
+  Fixed. FICA has been removed from ISO calculations (employee and employer) in iso.ts.
+  ficaWagesAdded = 0 for all ISO exercises. Employer cost formula uses no ficaEmr term.
+  The §3121(a)(22) exemption covers both the exercise and any disposition.
+  Authority: IRC §3121(a)(22); IRS Notice 2002-47.
+
+FLAG #9 — ISO $100k LIMIT USES GRANT-LEVEL TEST [LOW-MEDIUM PRIORITY]
+  Acknowledged simplification: the per-year-first-becoming-exercisable test required
+  by §422(d) is more favorable to the taxpayer than the grant-level test used. For
+  multi-year vesting schedules, the tool may over-convert ISO shares to NQO treatment.
+  Authority: IRC §422(d). Planned for v1.1 per SPEC.
+
+FLAG #10 — BELOW-FMV NQO STRIKE PRICE §409A RISK NOT WARNED [LOW PRIORITY]
+  An NQO with a strike price below FMV at grant is subject to §409A penalties.
+  The tool does not warn about this if the user enters strikePrice < grantFMV for NQOs.
+  Authority: Treas. Reg. §1.409A-1(b)(5)(i)(A).
+
+FLAG #11 — CALIFORNIA HIGH-INCOME SURTAX NOT IN DEFAULT [LOW PRIORITY]
+  California's 1% Mental Health Services Tax (Prop. 63) applies to income over $1M,
+  making the effective top CA rate 13.3%, not 9.3%. The default stateOrdinaryRate of
+  0.093 understates CA taxes for high-income executives.
+  Authority: CA Rev. & Tax. Code §17043.
+
+═══════════════════════════════════════════════════════════════════
+PRIORITY SUMMARY FOR CORRECTIONS BEFORE PUBLICATION
+═══════════════════════════════════════════════════════════════════
+
+  HIGH PRIORITY — ALL RESOLVED:
+    Flag #1 — TCJA rate: 37% confirmed correct per enacted extension [RESOLVED]
+    Flag #2 — §162(m) now applied to all comp types via YearContext [RESOLVED]
+    Flag #4 — FICA now accumulated correctly across components [RESOLVED]
+    Flag #8 — ISO FICA removed per IRC §3121(a)(22) [RESOLVED]
+
+  MEDIUM PRIORITY (results overstated/understated in specific scenarios):
+    Flag #3 — Stale SS wage base default ($168,600 vs current $176,100+)
+    Flag #5 — No 83(b) deadline warning (operational, not computational)
+    Flag #6 — Capital loss benefit overstated if no offsetting capital gains
+    Flag #7 — §409A risk on double-trigger RSUs not disclosed
+
+  LOW PRIORITY (acknowledged simplifications or edge cases):
+    Flag #9 — ISO $100k uses grant-level test instead of per-year exercisable test
+    Flag #10 — No §409A warning for below-FMV NQO strike prices
+    Flag #11 — California top-bracket surtax not in default state rate

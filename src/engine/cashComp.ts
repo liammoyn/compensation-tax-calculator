@@ -4,18 +4,24 @@ import type {
 	ComponentYearResult,
 	Package,
 	TaxInputs,
+	YearContext,
 } from "../types";
 import type { Scenario } from "./growth";
 import { bonusAtYear, salaryAtYear } from "./growth";
-import { employeeFicaEffective, employerFicaEffective } from "./tax";
+import { deductibleCompFor, employeeFicaMarginalRate, employerFicaMarginalRate } from "./tax";
 
 /**
  * Cash salary after-tax for year n.
  *
  * Employee:  salary × (1 − federalOrdinaryRate − stateOrdinaryRate − ficaEmployee)
- * Employer:  salary × (1 + ficaEmployer) × (1 − corporateRate)
+ * Employer:  grossCost − taxSavings
+ *   grossCost   = salary × (1 + ficaEmployer)
+ *   taxSavings  = (deductible + salary × ficaEmployer) × corporateRate
+ *   — deductible is §162(m)-limited (IRC §162(m) post-TCJA applies to all comp)
+ *   — employer FICA is always deductible under IRC §162(a) even when §162(m) caps the comp deduction
  *
- * IRC §162(m): if section162mApplies, caps employer deduction at $1 M.
+ * FICA uses marginal rates against year-to-date wages (yearCtx.ficaWagesAccrued)
+ * to correctly respect the SS wage base cap across all components (IRC §3121(a)(1)).
  */
 export function computeSalaryYear(
 	component: CashSalary,
@@ -23,30 +29,24 @@ export function computeSalaryYear(
 	scenario: Scenario,
 	n: number,
 	taxInputs: TaxInputs,
-): ComponentYearResult {
+	yearCtx: YearContext,
+): { result: ComponentYearResult; ficaWagesAdded: number; deductibleCompAdded: number } {
 	const salary = salaryAtYear(component.annualAmount, pkg, scenario, n);
-	const ficaEmp = employeeFicaEffective(salary, taxInputs);
-	const ficaEmr = employerFicaEffective(salary, taxInputs);
+	const ficaEmp = employeeFicaMarginalRate(salary, yearCtx.ficaWagesAccrued, taxInputs);
+	const ficaEmr = employerFicaMarginalRate(salary, yearCtx.ficaWagesAccrued, taxInputs);
 
 	const employeeAfterTaxCash =
-		salary *
-		(1 - taxInputs.federalOrdinaryRate - taxInputs.stateOrdinaryRate - ficaEmp);
+		salary * (1 - taxInputs.federalOrdinaryRate - taxInputs.stateOrdinaryRate - ficaEmp);
 
-	let employerNetCost: number;
-	if (taxInputs.section162mApplies && salary > 1_000_000) {
-		const deductible = 1_000_000;
-		const nonDeductible = salary - 1_000_000;
-		employerNetCost =
-			deductible * (1 + ficaEmr) * (1 - taxInputs.corporateRate) +
-			nonDeductible * (1 + ficaEmr); // no deduction on excess
-	} else {
-		employerNetCost = salary * (1 + ficaEmr) * (1 - taxInputs.corporateRate);
-	}
+	const deductible = deductibleCompFor(salary, yearCtx.deductibleCompAccrued, taxInputs);
+	const grossCost = salary * (1 + ficaEmr);
+	const taxSavings = (deductible + salary * ficaEmr) * taxInputs.corporateRate;
+	const employerNetCost = grossCost - taxSavings;
 
 	return {
-		componentType: "cash_salary",
-		employeeAfterTaxCash,
-		employerNetCost,
+		result: { componentType: "cash_salary", employeeAfterTaxCash, employerNetCost },
+		ficaWagesAdded: salary,
+		deductibleCompAdded: deductible,
 	};
 }
 
@@ -64,7 +64,8 @@ export function computeBonusYear(
 	n: number,
 	calendarYear: number,
 	taxInputs: TaxInputs,
-): ComponentYearResult {
+	yearCtx: YearContext,
+): { result: ComponentYearResult; ficaWagesAdded: number; deductibleCompAdded: number } {
 	const earnedBonus = bonusAtYear(component.targetAmount, pkg, scenario, n);
 	const paymentsThisYear = component.paymentSchedule.filter(
 		(p) => p.year === calendarYear,
@@ -75,30 +76,28 @@ export function computeBonusYear(
 			: 1.0;
 
 	const bonus = earnedBonus * paidFraction;
-	if (bonus === 0)
+	if (bonus === 0) {
 		return {
-			componentType: "cash_bonus",
-			employeeAfterTaxCash: 0,
-			employerNetCost: 0,
+			result: { componentType: "cash_bonus", employeeAfterTaxCash: 0, employerNetCost: 0 },
+			ficaWagesAdded: 0,
+			deductibleCompAdded: 0,
 		};
-
-	const ficaEmp = employeeFicaEffective(bonus, taxInputs);
-	const ficaEmr = employerFicaEffective(bonus, taxInputs);
-
-	const employeeAfterTaxCash =
-		bonus *
-		(1 - taxInputs.federalOrdinaryRate - taxInputs.stateOrdinaryRate - ficaEmp);
-
-	let employerNetCost: number;
-	if (taxInputs.section162mApplies && bonus > 1_000_000) {
-		const deductible = 1_000_000;
-		const nonDeductible = bonus - 1_000_000;
-		employerNetCost =
-			deductible * (1 + ficaEmr) * (1 - taxInputs.corporateRate) +
-			nonDeductible * (1 + ficaEmr);
-	} else {
-		employerNetCost = bonus * (1 + ficaEmr) * (1 - taxInputs.corporateRate);
 	}
 
-	return { componentType: "cash_bonus", employeeAfterTaxCash, employerNetCost };
+	const ficaEmp = employeeFicaMarginalRate(bonus, yearCtx.ficaWagesAccrued, taxInputs);
+	const ficaEmr = employerFicaMarginalRate(bonus, yearCtx.ficaWagesAccrued, taxInputs);
+
+	const employeeAfterTaxCash =
+		bonus * (1 - taxInputs.federalOrdinaryRate - taxInputs.stateOrdinaryRate - ficaEmp);
+
+	const deductible = deductibleCompFor(bonus, yearCtx.deductibleCompAccrued, taxInputs);
+	const grossCost = bonus * (1 + ficaEmr);
+	const taxSavings = (deductible + bonus * ficaEmr) * taxInputs.corporateRate;
+	const employerNetCost = grossCost - taxSavings;
+
+	return {
+		result: { componentType: "cash_bonus", employeeAfterTaxCash, employerNetCost },
+		ficaWagesAdded: bonus,
+		deductibleCompAdded: deductible,
+	};
 }

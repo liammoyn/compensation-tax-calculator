@@ -148,3 +148,8 @@ export const DEFAULT_TAX_INPUTS: TaxInputs = {
 };
 
 export const CURRENT_YEAR = new Date().getFullYear();
+
+export interface YearContext {
+	ficaWagesAccrued: number;
+	deductibleCompAccrued: number;
+}

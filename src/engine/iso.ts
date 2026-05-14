@@ -1,7 +1,7 @@
-import type { ComponentYearResult, ISO, Package, TaxInputs } from "../types";
+import type { ComponentYearResult, ISO, Package, TaxInputs, YearContext } from "../types";
 import type { Scenario } from "./growth";
 import { stockPriceAtYear } from "./growth";
-import { employeeFicaEffective, employerFicaEffective } from "./tax";
+import { deductibleCompFor } from "./tax";
 import { sharesExercisedPerYear } from "./vesting";
 
 const ISO_100K_LIMIT = 100_000;
@@ -26,12 +26,17 @@ export function isoShareSplit(
 
 /**
  * ISO at exercise — all treated as disqualifying dispositions (sell-on-exercise).
- * AMT = 0 (disqualifying disposition; spread recognized as ordinary income, not AMT preference item).
  *
- * Employee: (fmvAtExercise − strikePrice) × sharesExercised × (1 − ordinaryRate − stateRate − ficaEmployee)
- * Employer: spread × (1 + ficaEmployer) × (1 − corporateRate)
+ * FICA: None. IRC §3121(a)(22) excludes both the transfer of stock pursuant to
+ * an ISO exercise and any subsequent disposition (including disqualifying
+ * dispositions) from FICA wages. IRS Notice 2002-47 confirmed this exemption.
  *
- * Shares exceeding $100k limit receive identical NQO tax treatment.
+ * Employee: (fmvAtExercise − strikePrice) × sharesExercised × (1 − ordinaryRate − stateRate)
+ * Employer: spread × (1 − corporateRate) on the deductible portion; no FICA.
+ *   §162(m) cap applied via yearCtx if section162mApplies is set.
+ *   IRC §421(b) allows employer deduction on disqualifying disposition spread.
+ *
+ * Shares exceeding $100k limit receive NQO tax treatment (tracked separately in NQO engine).
  */
 export function computeISOYear(
 	component: ISO,
@@ -40,39 +45,45 @@ export function computeISOYear(
 	n: number,
 	calendarYear: number,
 	taxInputs: TaxInputs,
-): ComponentYearResult {
+	yearCtx: YearContext,
+): { result: ComponentYearResult; ficaWagesAdded: number; deductibleCompAdded: number } {
+	const zero = {
+		result: { componentType: "iso" as const, employeeAfterTaxCash: 0, employerNetCost: 0 },
+		ficaWagesAdded: 0,
+		deductibleCompAdded: 0,
+	};
+
 	const sharesThisYear =
 		sharesExercisedPerYear(
 			component.exerciseSchedule,
 			component.sharesGranted,
 		).get(calendarYear) ?? 0;
-	if (sharesThisYear === 0)
-		return {
-			componentType: "iso",
-			employeeAfterTaxCash: 0,
-			employerNetCost: 0,
-		};
+	if (sharesThisYear === 0) return zero;
 
 	const fmvAtExercise = stockPriceAtYear(pkg, scenario, n);
 	const spread = (fmvAtExercise - component.strikePrice) * sharesThisYear;
 
 	if (spread <= 0) {
 		return {
-			componentType: "iso",
-			employeeAfterTaxCash: 0,
-			employerNetCost: 0,
-			notes: "Underwater — no income",
+			result: {
+				componentType: "iso",
+				employeeAfterTaxCash: 0,
+				employerNetCost: 0,
+				notes: "Underwater — no income",
+			},
+			ficaWagesAdded: 0,
+			deductibleCompAdded: 0,
 		};
 	}
 
-	const ficaEmp = employeeFicaEffective(spread, taxInputs);
-	const ficaEmr = employerFicaEffective(spread, taxInputs);
-
+	// No FICA on ISO exercises per IRC §3121(a)(22)
 	const employeeAfterTaxCash =
-		spread *
-		(1 - taxInputs.federalOrdinaryRate - taxInputs.stateOrdinaryRate - ficaEmp);
-	const employerNetCost =
-		spread * (1 + ficaEmr) * (1 - taxInputs.corporateRate);
+		spread * (1 - taxInputs.federalOrdinaryRate - taxInputs.stateOrdinaryRate);
+
+	// Employer deducts spread per §421(b); §162(m) cap applied if applicable
+	const deductible = deductibleCompFor(spread, yearCtx.deductibleCompAccrued, taxInputs);
+	// No employer FICA on ISO, so grossCost = spread; taxSavings = deductible × corporateRate
+	const employerNetCost = spread - deductible * taxInputs.corporateRate;
 
 	const { isoShares, nqoShares } = isoShareSplit(
 		component.sharesGranted,
@@ -83,5 +94,9 @@ export function computeISOYear(
 			? `Disqualifying disposition; §100k limit: ${Math.round(isoShares)} ISO shares, ${Math.round(nqoShares)} treated as NQO`
 			: "Disqualifying disposition (sell-on-exercise)";
 
-	return { componentType: "iso", employeeAfterTaxCash, employerNetCost, notes };
+	return {
+		result: { componentType: "iso", employeeAfterTaxCash, employerNetCost, notes },
+		ficaWagesAdded: 0, // FICA exempt per IRC §3121(a)(22)
+		deductibleCompAdded: deductible,
+	};
 }

@@ -69,3 +69,67 @@ export function effectiveLTCGRate(taxInputs: TaxInputs): number {
 export function capitalLossRate(taxInputs: TaxInputs): number {
 	return taxInputs.federalLTCGRate + taxInputs.stateLTCGRate;
 }
+
+// ─── Marginal FICA helpers (for year-level wage accumulation) ─────────────────
+
+function ficaDollarAmount(wages: number, taxInputs: TaxInputs): number {
+	if (wages <= 0) return 0;
+	const { ficaRate, ssWageBase } = taxInputs;
+	return Math.min(wages, ssWageBase) * ficaRate + Math.max(0, wages - ssWageBase) * 0.0145;
+}
+
+function additionalMedicareDollarAmount(wages: number, taxInputs: TaxInputs): number {
+	if (wages <= taxInputs.additionalMedicareThreshold) return 0;
+	return taxInputs.additionalMedicareRate * (wages - taxInputs.additionalMedicareThreshold);
+}
+
+/**
+ * Marginal employee FICA rate for a component given wages already accrued in
+ * this calendar year from prior components. Correctly respects the SS wage base
+ * cap across all income sources from the same employer (IRC §3121(a)(1)).
+ */
+export function employeeFicaMarginalRate(
+	componentWages: number,
+	priorWages: number,
+	taxInputs: TaxInputs,
+): number {
+	if (componentWages <= 0) return 0;
+	const marginalDollars =
+		(ficaDollarAmount(priorWages + componentWages, taxInputs) -
+			ficaDollarAmount(priorWages, taxInputs)) +
+		(additionalMedicareDollarAmount(priorWages + componentWages, taxInputs) -
+			additionalMedicareDollarAmount(priorWages, taxInputs));
+	return marginalDollars / componentWages;
+}
+
+/**
+ * Marginal employer FICA rate for a component given wages already accrued.
+ * Excludes additionalMedicareRate (employee-only per IRC §3101(b)(2)).
+ */
+export function employerFicaMarginalRate(
+	componentWages: number,
+	priorWages: number,
+	taxInputs: TaxInputs,
+): number {
+	if (componentWages <= 0) return 0;
+	return (
+		(ficaDollarAmount(priorWages + componentWages, taxInputs) -
+			ficaDollarAmount(priorWages, taxInputs)) /
+		componentWages
+	);
+}
+
+/**
+ * §162(m)-aware deductible amount for the employer.
+ * When section162mApplies is false, the full grossComp is deductible.
+ * When true, only up to $1M cumulative (across all comp types) is deductible
+ * per IRC §162(m) as amended by TCJA §13601 (P.L. 115-97, effective 2018).
+ */
+export function deductibleCompFor(
+	grossComp: number,
+	priorDeductibleComp: number,
+	taxInputs: TaxInputs,
+): number {
+	if (!taxInputs.section162mApplies) return grossComp;
+	return Math.max(0, Math.min(grossComp, 1_000_000 - priorDeductibleComp));
+}

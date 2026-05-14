@@ -1,0 +1,73 @@
+MEMO CONTENT CHECKLIST
+======================
+Executive Strategy Memo — Compensation Tax Planning Tool
+(Track 1 | 5 pages max, double-spaced)
+
+--- SECTION 1: BUSINESS PROBLEM / ECONOMIC DECISION ---
+- State the problem: early-stage companies and executive hires face a complex array of comp structures (cash, equity, options) whose after-tax value varies dramatically depending on the form, timing, and tax situation of both employee and employer
+- Identify the audience: MBA students, startup founders, CFOs, or candidates negotiating an executive offer who need to compare comp packages on an apples-to-apples after-tax, NPV basis
+- Explain why raw pre-tax numbers mislead: a $1M NQO grant, a $1M ISO grant, and $1M in restricted stock have very different after-tax values for both employee and employer
+
+--- SECTION 2: TAX MECHANISMS AT PLAY (All Taxes) ---
+- Cash salary/bonus: taxed as ordinary income (federal + state + FICA/Social Security wage base cap + 0.9% Additional Medicare above $200k threshold)
+- Restricted Stock (RS) — no 83(b): taxed at ordinary rates on FMV at each vest tranche; employer gets deduction at vest
+- Restricted Stock (RS) — with 83(b) election: tax paid at grant on then-current FMV; future appreciation taxed at LTCG rates (20% federal + state); employer deduction taken at grant; capital loss treatment if stock declines below grant FMV
+- RSUs: ordinary income at vest (time-based or double-trigger liquidity event); no 83(b) available; FICA applies
+- ISOs (§422): $100k annual limit (§422(d)) splits excess shares into NQO treatment; modeled as disqualifying dispositions (sell-on-exercise) → ordinary income, no AMT preference; employer gets deduction on disqualifying disposition spread
+- NQOs: spread at exercise is ordinary income + FICA for employee; employer deducts spread × (1 + employer FICA) with corporate tax shield
+- AMT: tracked at 26% rate; relevant for qualifying ISO exercises (hold-and-sell scenario)
+- NIIT (3.8%): applies to net investment income; toggled per scenario
+- Corporate tax rate (21%): reduces employer's net cost on deductible comp; §162(m) $1M deduction cap for covered employees is modeled as a toggle
+- State taxes: separate ordinary and LTCG rates layered on top of federal; tool defaults to California rates (9.3%) as illustration
+- LTCG vs. ordinary income differential: core tax planning lever, especially for RS 83(b) and ISO qualifying dispositions
+
+--- SECTION 3: ALL PARTIES FRAMEWORK ---
+- Employee perspective: after-tax cash flows discounted at employee's personal discount rate → Employee NPV
+- Employer perspective: gross comp cost minus corporate tax deduction on eligible amounts, plus employer FICA, discounted at corporate hurdle rate → Employer NPV Cost
+- The tool surfaces both simultaneously — a structure that minimizes employee taxes may also reduce the employer's deduction (e.g., qualifying ISO hold), illustrating the negotiated split of the tax pie
+- §162(m) scenario: if the deduction is lost on cash comp above $1M for covered employees, the employer's after-tax cost rises materially — the tool models this toggle
+
+--- SECTION 4: THE STRATEGIC SOLUTION (Tool Features) ---
+- Web application built with React/TypeScript; runs locally; persistent storage via SQLite
+- Users configure one or more named "packages," each with: company valuation, shares outstanding, planning horizon (years), stock price growth rates (downside / base / upside scenarios), salary growth rates, and bonus growth rates
+- Comp components available: Cash Salary, Cash Bonus (custom payment schedule), Restricted Stock (with/without 83(b)), RSUs (time-based or double-trigger), ISOs, NQOs
+- Custom vesting and exercise schedules: users can define precise month-level vesting or exercise events rather than defaulting to standard 4-year cliff/ratable
+- Tax inputs panel: fully configurable federal, state, FICA, AMT, NIIT, corporate, discount rates — can be set globally or overridden per package
+- Year-by-year table: shows stock price, employee after-tax cash, employer net cost, and per-component breakdown for each scenario
+- NPV summary: Employee NPV and Employer NPV Cost for each scenario (downside / base / upside); marginal NPV column isolates each component's contribution
+- Calculation transparency: NPV formula section shows the exact present-value math applied
+- Package comparison view: side-by-side NPV comparison across multiple configured packages for the same scenarios
+- Vesting timeline visualization: graphical representation of when equity events (vest/exercise) occur across the horizon
+
+--- SECTION 5: ALL COSTS / RISKS & LIMITATIONS ---
+- Non-tax frictions to discuss:
+  - 83(b) election requires filing within 30 days of grant; no extension; failure forfeits the election permanently
+  - ISO hold requirement (>1 yr from exercise, >2 yr from grant) creates illiquidity risk; model currently assumes disqualifying disposition for simplicity
+  - Liquidity risk for pre-IPO equity: RSU double-trigger vesting and RS may vest with no market to sell — cash tax liability with no liquid proceeds
+  - AMT exposure on qualifying ISO exercises: model currently uses disqualifying disposition; AMT risk on hold-and-exercise scenario is noted but not fully quantified
+  - Exercise price financing: exercising options requires cash outlay; model does not model borrowing costs or cashless exercise mechanics
+  - State sourcing rules: multi-state residents face allocation issues (e.g., equity granted in CA but exercised after relocating); tool uses a single blended state rate — a simplification
+  - §409A valuation risk for RS/option grant prices at private companies
+  - §162(m) grandfathering and transition rules are nuanced; the toggle is a binary on/off approximation
+  - Clawback, vesting acceleration, and change-of-control provisions are not modeled
+  - Tool assumes sell-on-vest/exercise for all equity — does not model hold decisions or basis tracking for subsequent sale
+  - Discount rate selection is subjective; results are sensitive to this assumption (show sensitivity)
+
+--- SECTION 6: VISUALS TO INCLUDE (do not count toward 5-page limit) ---
+- Screenshot of the package builder UI showing a sample configuration
+- Year-by-year table for a base-case scenario (cash salary + RSU + NQO package)
+- NPV comparison bar chart: Employee NPV vs. Employer NPV Cost across downside/base/upside for two competing packages (e.g., high-cash vs. high-equity)
+- 83(b) vs. no-83(b) RS comparison chart: employee after-tax NPV under each election at varying stock growth rates
+- ISO vs. NQO comparison: employer net cost vs. employee after-tax value under the same spread scenario
+- Vesting timeline visualization showing cliff/ratable schedule
+
+--- SECTION 7: KEY TAKEAWAY FRAMING (for memo conclusion) ---
+- The tool makes the tax trade-offs legible: a high-equity package with 83(b) + ISO structure maximizes employee after-tax NPV in the upside scenario but creates illiquidity and AMT risk; a cash-heavy or NQO structure is more predictable but gives up LTCG treatment
+- Employer perspective matters: NQOs generate a corporate deduction on exercise spread (benefiting the employer); ISOs with qualifying disposition do not — this difference is material in high-growth scenarios and should inform negotiation
+- The "right" structure depends on growth expectations, employee liquidity needs, employer tax position, and state of residence — the tool lets both parties explore the parameter space interactively
+
+--- AI AUDIT TRAIL APPENDIX (separate from 5-page memo) ---
+- Document which IRC sections were verified against primary authority: §83 (property transferred in connection with services), §422 (ISOs), §83(b) election, §409A, §162(m), §1(h) (LTCG rates), §1411 (NIIT), §3101/3111 (FICA)
+- Note any AI-generated tax logic that was checked and corrected (e.g., AMT interaction with disqualifying dispositions, FICA wage base treatment)
+- Include representative prompts used to generate tax calculation logic and how outputs were verified
+- Cite IRS publications and current rate schedules used to set default values (e.g., 2026 SS wage base, LTCG brackets)

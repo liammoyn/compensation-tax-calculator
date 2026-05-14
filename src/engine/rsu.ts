@@ -1,7 +1,7 @@
-import type { ComponentYearResult, Package, RSU, TaxInputs } from "../types";
+import type { ComponentYearResult, Package, RSU, TaxInputs, YearContext } from "../types";
 import type { Scenario } from "./growth";
 import { stockPriceAtYear } from "./growth";
-import { employeeFicaEffective, employerFicaEffective } from "./tax";
+import { deductibleCompFor, employeeFicaMarginalRate, employerFicaMarginalRate } from "./tax";
 import { sharesVestedPerYear } from "./vesting";
 
 /**
@@ -12,7 +12,10 @@ import { sharesVestedPerYear } from "./vesting";
  *   service-vested shares that haven't settled (calendarYear < liquidityEventYear) = $0.
  *
  * Employee: fmvAtVest × sharesVesting × (1 − federalOrdinaryRate − stateOrdinaryRate − ficaEmployee)
- * Employer: fmvAtVest × sharesVesting × (1 + ficaEmployer) × (1 − corporateRate)
+ * Employer: grossCost − taxSavings
+ *   grossCost  = income × (1 + ficaEmployer)
+ *   taxSavings = (deductible + income × ficaEmployer) × corporateRate
+ *   FICA per Rev. Rul. 2012-18; §162(m) applied via yearCtx (post-TCJA, all comp subject to cap).
  */
 export function computeRSUYear(
 	component: RSU,
@@ -21,17 +24,19 @@ export function computeRSUYear(
 	n: number,
 	calendarYear: number,
 	taxInputs: TaxInputs,
-): ComponentYearResult {
+	yearCtx: YearContext,
+): { result: ComponentYearResult; ficaWagesAdded: number; deductibleCompAdded: number } {
+	const zero = {
+		result: { componentType: "rsu" as const, employeeAfterTaxCash: 0, employerNetCost: 0 },
+		ficaWagesAdded: 0,
+		deductibleCompAdded: 0,
+	};
+
 	const sharesThisYear =
 		sharesVestedPerYear(component.vestingSchedule, component.sharesGranted).get(
 			calendarYear,
 		) ?? 0;
-	if (sharesThisYear === 0)
-		return {
-			componentType: "rsu",
-			employeeAfterTaxCash: 0,
-			employerNetCost: 0,
-		};
+	if (sharesThisYear === 0) return zero;
 
 	let fmvAtVest: number;
 	let notes: string | undefined;
@@ -39,12 +44,7 @@ export function computeRSUYear(
 	if (component.vestingType === "double_trigger") {
 		const liquidityYear = component.liquidityEventYear;
 		if (!liquidityYear || calendarYear < liquidityYear) {
-			// Service-vested but not yet settled — no taxable event yet
-			return {
-				componentType: "rsu",
-				employeeAfterTaxCash: 0,
-				employerNetCost: 0,
-			};
+			return zero;
 		}
 		const pkgStartYear = calendarYear - n + 1;
 		const liquidityN = liquidityYear - pkgStartYear + 1;
@@ -55,18 +55,19 @@ export function computeRSUYear(
 	}
 
 	const income = fmvAtVest * sharesThisYear;
-	const ficaEmp = employeeFicaEffective(income, taxInputs);
-	const ficaEmr = employerFicaEffective(income, taxInputs);
+	const ficaEmp = employeeFicaMarginalRate(income, yearCtx.ficaWagesAccrued, taxInputs);
+	const ficaEmr = employerFicaMarginalRate(income, yearCtx.ficaWagesAccrued, taxInputs);
+	const deductible = deductibleCompFor(income, yearCtx.deductibleCompAccrued, taxInputs);
+
+	const employeeAfterTaxCash =
+		income * (1 - taxInputs.federalOrdinaryRate - taxInputs.stateOrdinaryRate - ficaEmp);
+	const grossCost = income * (1 + ficaEmr);
+	const taxSavings = (deductible + income * ficaEmr) * taxInputs.corporateRate;
+	const employerNetCost = grossCost - taxSavings;
 
 	return {
-		componentType: "rsu",
-		employeeAfterTaxCash:
-			income *
-			(1 -
-				taxInputs.federalOrdinaryRate -
-				taxInputs.stateOrdinaryRate -
-				ficaEmp),
-		employerNetCost: income * (1 + ficaEmr) * (1 - taxInputs.corporateRate),
-		notes,
+		result: { componentType: "rsu", employeeAfterTaxCash, employerNetCost, notes },
+		ficaWagesAdded: income,
+		deductibleCompAdded: deductible,
 	};
 }
