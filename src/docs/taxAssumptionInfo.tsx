@@ -14,6 +14,26 @@ function Callout({ children }: { children: ReactNode }) {
 	);
 }
 
+function TaxAuthority({ items }: { items: { cite: string; description: string }[] }) {
+	return (
+		<div className="mt-4 border-t border-border/40 pt-3">
+			<p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">
+				Tax Authority
+			</p>
+			<ul className="space-y-2.5">
+				{items.map((item) => (
+					<li key={item.cite} className="text-xs">
+						<span className="block font-mono font-medium text-foreground/70">
+							{item.cite}
+						</span>
+						<span className="block text-muted-foreground mt-0.5">{item.description}</span>
+					</li>
+				))}
+			</ul>
+		</div>
+	);
+}
+
 export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 	federalOrdinaryRate: {
 		title: "Federal Ordinary Income Tax Rate",
@@ -37,6 +57,13 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					recent tax return (Form 1040, line 16 ÷ taxable income) for your
 					effective rate.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §1(a)–(e)", description: "Rate schedule for individuals; establishes the progressive bracket structure." },
+						{ cite: "IRC §1(j)(2)(D)", description: "37% top marginal rate enacted by TCJA (P.L. 115-97); extended through 2026 by subsequent legislation." },
+						{ cite: "IRS Rev. Proc. (annual)", description: "IRS adjusts bracket thresholds annually for inflation; confirm current-year thresholds before filing." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -71,6 +98,13 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					Most employees evaluating a tech compensation package will use{" "}
 					<strong>20%</strong>.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §1(h)", description: "Preferential tax rates on net capital gain: 0%, 15%, or 20% depending on taxable income bracket." },
+						{ cite: "IRC §1(h)(1)(D)", description: "20% rate applies to taxpayers whose income falls in the top ordinary income bracket." },
+						{ cite: "IRC §1222(3)", description: "Defines \"long-term capital gain\" as gain from a capital asset held more than one year." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -98,6 +132,14 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					modeled in v1 of this tool. For most scenarios here, the AMT rate does
 					not affect your results.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §55(a)", description: "Imposes the alternative minimum tax when AMTI (reduced by the exemption) exceeds regular tax liability." },
+						{ cite: "IRC §55(b)(1)", description: "AMT rate structure: 26% on AMTI up to the bracket threshold (~$220,700 for 2024, inflation-adjusted); 28% above." },
+						{ cite: "IRC §55(d)", description: "AMT exemption amounts ($85,700 for single / $133,300 for MFJ in 2024); phased out at higher income levels." },
+						{ cite: "IRC §56(b)(3)", description: "ISO spread on exercise is an AMT preference item for qualifying (hold-and-exercise) dispositions." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -130,6 +172,15 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					<strong>Default: 7.65%</strong> (the full per-side rate). Leave this
 					at the default unless you have a specific reason to change it.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §3101(a)", description: "6.2% employee OASDI (Social Security) tax on wages up to the annual wage base." },
+						{ cite: "IRC §3101(b)", description: "1.45% employee HI (Medicare) tax on all wages with no cap." },
+						{ cite: "IRC §3111(a)", description: "6.2% employer OASDI matching tax; mirrors the employee obligation." },
+						{ cite: "IRC §3111(b)", description: "1.45% employer Medicare matching tax on all wages." },
+						{ cite: "IRC §3121(a)(1)", description: "Defines the SS wage base cap; OASDI tax ceases above this amount." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -153,6 +204,13 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					wages exceed the Additional Medicare Threshold (see below). Leave at
 					the default unless tax law has changed.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §3101(b)(2)", description: "Additional 0.9% HI tax on employee wages exceeding the threshold; enacted by the ACA (P.L. 111-148), effective 2013." },
+						{ cite: "IRC §3102(f)", description: "Employer withholding rules for the Additional Medicare Tax once wages exceed $200,000." },
+						{ cite: "IRC §3111", description: "No employer matching obligation for the additional 0.9%; employee-only surtax." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -177,6 +235,11 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					</ul>
 					Set this to $250,000 if you file jointly with a spouse.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §3101(b)(2)(B)", description: "Threshold amounts: $200,000 for single filers; $250,000 for married filing jointly; $125,000 for married filing separately." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -208,6 +271,12 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 						</li>
 					</ul>
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "CA Rev. & Tax. Code §17041", description: "California progressive income tax brackets; top rate 9.3% on income over ~$61k (single)." },
+						{ cite: "CA Rev. & Tax. Code §17043", description: "California Mental Health Services Tax: 1% surtax on income over $1M, making the effective top CA rate 10.3% (or 13.3% for the top income bracket). The default 9.3% does not reflect this." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -228,6 +297,12 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					tax, so this would be 0%. California taxes capital gains as ordinary
 					income (up to 13.3%).
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §1(h)", description: "Federal preferential LTCG rates (0/15/20%). States are not required to conform; most states tax capital gains as ordinary income." },
+						{ cite: "CA Rev. & Tax. Code §17024.5", description: "California conforms to federal gross income definitions but does not adopt the federal LTCG preference — all capital gains are taxed at ordinary income rates in California." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -252,6 +327,13 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					Adjusted Gross Income (MAGI) exceeds $200k (single) or $250k (MFJ). If
 					your income is clearly above those thresholds, enable the toggle.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §1411(a)", description: "Imposes the 3.8% NIIT on the lesser of net investment income or excess of MAGI over the threshold ($200k single / $250k MFJ)." },
+						{ cite: "IRC §1411(c)", description: "Net investment income includes capital gains, dividends, interest, and passive activity income — but NOT wages, NQO spread, RSU/RS vest income, or active business income." },
+						{ cite: "Treas. Reg. §1.1411-4", description: "Defines the computation of net investment income; excludes items derived from a trade or business that are not passive activities." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -275,6 +357,13 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					that are not yet profitable may set this to 0% since they have no
 					taxable income to offset.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §11(b)", description: "Flat 21% corporate income tax rate on C-corporation taxable income, effective for tax years beginning after December 31, 2017 (TCJA §13001, P.L. 115-97). The flat rate has no sunset provision." },
+						{ cite: "IRC §162(a)", description: "Reasonable compensation paid to employees is deductible as an ordinary and necessary business expense, reducing the net cost to the employer." },
+						{ cite: "IRC §162(m)", description: "Limits the corporate deduction for covered employee compensation to $1M/yr at publicly held corporations; see the §162(m) toggle." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -348,6 +437,12 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					<strong>2024 value: $168,600.</strong> Use $176,100 for 2025. Update
 					this field each year or if you are projecting multi-year compensation.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §3121(a)(1)", description: "Excludes wages above the annual contribution and benefit base from the definition of \"wages\" for OASDI (Social Security) purposes." },
+						{ cite: "Social Security Act §230", description: "Cost-of-living adjustment formula used by the SSA to set the wage base annually; the SSA announces the new base each October." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -373,6 +468,13 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					exceeds the MAGI thresholds. When on, your effective federal LTCG rate
 					becomes 23.8% (20% + 3.8%) rather than 20%.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §1411(a)(1)", description: "3.8% surtax applies to the lesser of net investment income or the excess of MAGI over the threshold amount." },
+						{ cite: "IRC §1411(b)", description: "MAGI threshold: $200,000 for single filers; $250,000 for married filing jointly; not inflation-adjusted." },
+						{ cite: "IRC §1411(c)", description: "NIIT applies only to net investment income (capital gains, interest, dividends) — not to wages, NQO spread, or RSU/RS vest income." },
+					]}
+				/>
 			</>
 		),
 	},
@@ -400,6 +502,14 @@ export const TAX_INPUT_INFO: Partial<Record<keyof TaxInputs, TaxInputInfo>> = {
 					executive compensation above $1M. Leave it off for private companies
 					or when total annual compensation is below the cap.
 				</Callout>
+				<TaxAuthority
+					items={[
+						{ cite: "IRC §162(m)(1)", description: "Disallows deduction for \"applicable employee remuneration\" exceeding $1M paid to a covered employee of a publicly held corporation." },
+						{ cite: "IRC §162(m)(3)", description: "\"Covered employee\" defined; includes the principal executive officer, principal financial officer, and the three next highest-paid officers." },
+						{ cite: "TCJA §13601 (P.L. 115-97)", description: "Eliminated the performance-based compensation exception effective for tax years beginning after 12/31/2017. All compensation forms (cash, NQO spread, RSU vest, RS vest) are now subject to the $1M cap." },
+						{ cite: "IRS Notice 2018-68", description: "IRS transition guidance on the post-TCJA application of §162(m); addresses grandfathered written binding contracts." },
+					]}
+				/>
 			</>
 		),
 	},

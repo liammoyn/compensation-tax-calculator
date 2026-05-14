@@ -392,6 +392,7 @@ export function PackageCard({
 								pkg={pkg}
 								taxInputs={pkg.taxInputs ?? globalTaxInputs}
 								result={result}
+								onInfoClick={onInfoClick}
 							/>
 						</div>
 					</>

@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import { useMemo, useState } from "react";
 import { npv } from "../engine/npv";
 import { computeMarginalNPV } from "../engine/sensitivity";
@@ -81,6 +82,7 @@ interface FormulaBlockProps {
 	basePrice: number;
 	ficaEff: number;
 	baseResult: ScenarioResult;
+	onInfoClick?: (key: string) => void;
 }
 
 function FormulaBlock({
@@ -91,6 +93,7 @@ function FormulaBlock({
 	basePrice,
 	ficaEff,
 	baseResult,
+	onInfoClick,
 }: FormulaBlockProps) {
 	const v = mode === "variables";
 	const {
@@ -396,9 +399,21 @@ function FormulaBlock({
 	return (
 		<div className="border border-border/40 rounded-lg overflow-hidden">
 			<div className="bg-muted/30 px-3 py-2 border-b border-border/30 flex items-center justify-between">
-				<span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
-					{COMPONENT_LABELS[component.type]}
-				</span>
+				<div className="flex items-center gap-1">
+					<span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
+						{COMPONENT_LABELS[component.type]}
+					</span>
+					{onInfoClick && (
+						<button
+							type="button"
+							onClick={() => onInfoClick(`calc.${component.type}`)}
+							className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+							aria-label={`Info about ${COMPONENT_LABELS[component.type]} calculation`}
+						>
+							<Info className="h-3 w-3" />
+						</button>
+					)}
+				</div>
 				<span className="text-xs font-mono text-muted-foreground/60">
 					NPV contribution: {formatCurrency(compNPV)}
 				</span>
@@ -678,9 +693,10 @@ interface Props {
 	pkg: Package;
 	taxInputs: TaxInputs;
 	result: PackageResult;
+	onInfoClick?: (key: string) => void;
 }
 
-export function PackageCalculations({ pkg, taxInputs, result }: Props) {
+export function PackageCalculations({ pkg, taxInputs, result, onInfoClick }: Props) {
 	const [mode, setMode] = useState<Mode>("variables");
 	const [marginalMode, setMarginalMode] = useState<MarginalMode>("absolute");
 	const v = mode === "variables";
@@ -737,10 +753,20 @@ export function PackageCalculations({ pkg, taxInputs, result }: Props) {
 
 				{/* Symbol legend */}
 				<div className="border border-border/40 rounded-lg overflow-hidden">
-					<div className="bg-muted/30 px-3 py-2 border-b border-border/30">
+					<div className="bg-muted/30 px-3 py-2 border-b border-border/30 flex items-center gap-1">
 						<span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
 							Symbol Legend
 						</span>
+						{onInfoClick && (
+							<button
+								type="button"
+								onClick={() => onInfoClick("calc.symbol_legend")}
+								className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+								aria-label="Info about Symbol Legend"
+							>
+								<Info className="h-3 w-3" />
+							</button>
+						)}
 					</div>
 					<div className="overflow-x-auto">
 						<table className="w-full text-xs">
@@ -846,15 +872,28 @@ export function PackageCalculations({ pkg, taxInputs, result }: Props) {
 						basePrice={basePrice}
 						ficaEff={ficaEff}
 						baseResult={baseResult}
+						onInfoClick={onInfoClick}
 					/>
 				))}
 
 				{/* NPV roll-up */}
 				<div className="border border-border/40 rounded-lg overflow-hidden">
 					<div className="bg-muted/30 px-3 py-2 border-b border-border/30 flex items-center justify-between">
-						<span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
-							NPV Roll-up
-						</span>
+						<div className="flex items-center gap-1">
+							<span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/60">
+								NPV Roll-up
+							</span>
+							{onInfoClick && (
+								<button
+									type="button"
+									onClick={() => onInfoClick("calc.npv")}
+									className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+									aria-label="Info about NPV Roll-up"
+								>
+									<Info className="h-3 w-3" />
+								</button>
+							)}
+						</div>
 						<span className="text-xs font-mono text-muted-foreground/60">
 							Employee NPV: {formatCurrency(baseResult.employeeNPV)}
 						</span>
